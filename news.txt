@@ -1,2 +1,2 @@
-# 1st version for pebble
+# 🎉1st version for pebble🎉
 yep, this is the first version so don't expect it to be very good or not have bugs
