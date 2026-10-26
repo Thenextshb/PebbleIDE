@@ -1,22 +1,2 @@
-// PebbleIDE news. Posts in this file show up on the home page.
-// Edit it on GitHub (click the pencil icon, then "Commit changes") and the home page
-// updates right away. No rebuild needed.
-//
-// Lines that start with // are notes like this one. They never show on the site.
-//
-// HOW TO WRITE A POST
-//   # The title of the post         <- a post starts with # and a space
-//   Date: 2026-10-26                <- optional
-//   Link: Try it out | editor.html  <- optional button: the button's text | where it goes
-//   Image: https://...              <- optional picture at the top of the post
-//   Everything else is the text of the post.
-//   Leave an empty line between paragraphs.
-//
-// Put the newest post at the top. To try it, copy the example below,
-// paste it under these notes, and delete the // at the start of each line.
-//
-// # Hello from PebbleIDE
-// Date: 2026-10-26
-// PebbleIDE is now on GitHub!
-//
-// Link: Start creating | editor.html
+# 1st version for pebble
+yep, this is the first version so don't expect it to be very good or not have bugs
