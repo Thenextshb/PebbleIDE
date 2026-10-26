@@ -1,2 +1,3 @@
 # PebbleIDE
-Pebble IDE is a mod of Turbowarp with extra features and more coming soon
+this is PebbleIDE an IDE built off of scratch, turbowarp and panguinmod for inspiration 
+you can visit it at [PebbleIDE](https://pebbleide.com)
