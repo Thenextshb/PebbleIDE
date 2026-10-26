@@ -46,6 +46,8 @@ import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/tw-load-scratch-blocks-hoc.jsx';
 import {findTopBlock} from '../lib/backpack/code-payload.js';
 import {gentlyRequestPersistentStorage} from '../lib/tw-persistent-storage.js';
+import {startReorder, moveItem} from '../lib/pebble-drag-reorder';
+import {setCategoryOrder} from '../lib/pebble-category-order';
 
 // TW: Strings we add to scratch-blocks are localized here
 const messages = defineMessages({
@@ -103,6 +105,7 @@ class Blocks extends React.Component {
             'detachVM',
             'getToolboxXML',
             'handleCategorySelected',
+            'handleCategoryPointerDown',
             'handleConnectionModalStart',
             'handleDrop',
             'handleStatusButtonUpdate',
@@ -168,6 +171,7 @@ class Blocks extends React.Component {
         );
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
+        this.blocks.addEventListener('pointerdown', this.handleCategoryPointerDown);
 
         // Register buttons under new callback keys for creating variables,
         // lists, and procedures from extensions.
@@ -291,6 +295,7 @@ class Blocks extends React.Component {
     componentWillUnmount () {
         this.detachVM();
         this.unmounted = true;
+        this.blocks.removeEventListener('pointerdown', this.handleCategoryPointerDown);
         this.workspace.dispose();
         clearTimeout(this.toolboxUpdateTimeout);
 
@@ -596,6 +601,27 @@ class Blocks extends React.Component {
     }
     setBlocks (blocks) {
         this.blocks = blocks;
+    }
+    handleCategoryPointerDown (e) {
+        // Hold down on a category to move it somewhere else in the list
+        const menu = this.workspace.toolbox_ && this.workspace.toolbox_.categoryMenu_;
+        if (!menu) return;
+        const categories = menu.categories_;
+        const rows = categories.map(category => category.item_.parentNode);
+        startReorder(e, {
+            items: rows,
+            index: categories.findIndex(category => category.item_.contains(e.target)),
+            axis: 'y',
+            onMove: (from, to) => {
+                setCategoryOrder(moveItem(categories.map(category => category.id_), from, to));
+                // Show the new order right away; the toolbox is rebuilt in that order next
+                for (const row of moveItem(rows, from, to)) menu.table.appendChild(row);
+                const toolboxXML = this.getToolboxXML();
+                if (toolboxXML) {
+                    this.props.updateToolboxState(toolboxXML);
+                }
+            }
+        });
     }
     handlePromptStart (message, defaultValue, callback, optTitle, optVarType) {
         const p = {prompt: {callback, message, defaultValue}};

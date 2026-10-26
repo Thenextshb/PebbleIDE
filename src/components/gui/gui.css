@@ -74,6 +74,11 @@
     color: $text-primary;
 }
 
+/* Things addons add to the row, like the find bar, stay after the normal tabs */
+.tab-list > * {
+    order: 4;
+}
+
 .tab {
     flex-grow: 1;
     height: 80%;
@@ -104,22 +109,26 @@
     margin-right: -0.5rem;
 }
 
-[dir="ltr"] .tab:nth-of-type(1) {
+/* The tabs can be dragged into a different order, so these go by where a tab is shown */
+[dir="ltr"] .tab-position-1 {
     margin-left: 0;
 }
 
-[dir="rtl"] .tab:nth-of-type(1) {
+[dir="rtl"] .tab-position-1 {
     margin-right: 0;
 }
 
 /* Use z-indices to force left-on-top for tabs */
-.tab:nth-of-type(1) {
+.tab-position-1 {
+    order: 1;
     z-index: 3;
 }
-.tab:nth-of-type(2) {
+.tab-position-2 {
+    order: 2;
     z-index: 2;
 }
-.tab:nth-of-type(3) {
+.tab-position-3 {
+    order: 3;
     z-index: 1;
 }
 

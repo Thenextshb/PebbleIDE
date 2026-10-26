@@ -1,3 +1,5 @@
+import { startPauseScripts } from '../../../src/lib/pebble-expansions/pause-scripts';
+
 export default function ({ scaffolding }) {
   // This file is based on the `pause` addon from Scratch Addons
   // All major portions of this file were written by me, so the GPL does not apply
@@ -12,19 +14,41 @@ export default function ({ scaffolding }) {
 
   let audioContextStateChange = Promise.resolve();
 
+  // PebbleIDE: "when pause clicked" scripts keep running until they're done, then the project fully pauses
+  let pauseScripts = [];
+
   const setPaused = (_paused) => {
+    const didChange = paused !== _paused;
+    if (didChange) {
+      // Start these while new scripts are still allowed to start
+      if (_paused) {
+        const scripts = startPauseScripts(vm.runtime, () => {
+          // Finish pausing, unless the project was unpaused (or paused again) in the meantime
+          if (paused && pauseScripts === scripts) {
+            pauseScripts = [];
+            setPaused(true);
+          }
+        });
+        pauseScripts = scripts;
+      } else {
+        pauseScripts = [];
+      }
+    }
     paused = _paused;
 
     if (paused) {
-      audioContextStateChange = audioContextStateChange.then(() => {
-        return vm.runtime.audioEngine.audioContext.suspend();
-      });
-      if (!vm.runtime.ioDevices.clock._paused) {
-        vm.runtime.ioDevices.clock.pause();
+      // Sounds and the timer keep going until the "when pause clicked" scripts are done
+      if (pauseScripts.length === 0) {
+        audioContextStateChange = audioContextStateChange.then(() => {
+          return vm.runtime.audioEngine.audioContext.suspend();
+        });
+        if (!vm.runtime.ioDevices.clock._paused) {
+          vm.runtime.ioDevices.clock.pause();
+        }
       }
 
       for (const thread of vm.runtime.threads) {
-        if (!thread.updateMonitor && !pausedThreadState.has(thread)) {
+        if (!thread.updateMonitor && !pausedThreadState.has(thread) && !pauseScripts.includes(thread)) {
           const pauseState = {
             pauseTime: vm.runtime.currentMSecs,
             status: thread.status,
@@ -37,12 +61,17 @@ export default function ({ scaffolding }) {
       // Immediately emit project stop
       // Scratch will do this automatically, but there may be a slight delay.
       vm.runtime.emit('PROJECT_RUN_STOP');
-      vm.runtime.emit('RUNTIME_PAUSED');
+      if (didChange) {
+        vm.runtime.emit('RUNTIME_PAUSED');
+      }
     } else {
       audioContextStateChange = audioContextStateChange.then(() => {
         return vm.runtime.audioEngine.audioContext.resume();
       });
-      vm.runtime.ioDevices.clock.resume();
+      // The timer isn't paused yet if "when pause clicked" scripts were still running
+      if (vm.runtime.ioDevices.clock._paused) {
+        vm.runtime.ioDevices.clock.resume();
+      }
 
       const now = Date.now();
       for (const thread of vm.runtime.threads) {
@@ -103,7 +132,11 @@ export default function ({ scaffolding }) {
   // Disable edge-activated hats and hats like "when key pressed" while paused.
   const originalStartHats = vm.runtime.startHats;
   vm.runtime.startHats = function (...args) {
-    if (paused) {
+    const hat = args[0];
+    // "when pause clicked" scripts can still broadcast and make clones while they finish
+    const fromPauseScript = pauseScripts.length > 0 &&
+      (hat === 'event_whenbroadcastreceived' || hat === 'control_start_as_clone');
+    if (paused && !fromPauseScript) {
       return [];
     }
     return originalStartHats.apply(this, args);

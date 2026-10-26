@@ -213,6 +213,39 @@ const patchCompiler = () => {
 };
 
 /**
+ * Make "when stop clicked" run when the stop sign is clicked or a "stop all" block runs.
+ * @param {Runtime} runtime The runtime.
+ */
+const installStopHat = runtime => {
+    if (runtime._hats.event_whenstopclicked) return;
+    runtime._hats.event_whenstopclicked = {
+        restartExistingThreads: true
+    };
+    // Clicking the green flag and opening a project also stop everything first; those aren't the stop sign
+    let ignoreStops = 0;
+    const ignoreStopsDuring = method => {
+        const original = runtime[method];
+        runtime[method] = function (...args) {
+            ignoreStops++;
+            try {
+                return original.apply(this, args);
+            } finally {
+                ignoreStops--;
+            }
+        };
+    };
+    ignoreStopsDuring('greenFlag');
+    ignoreStopsDuring('dispose');
+    runtime.on('PROJECT_STOP_ALL', () => {
+        if (ignoreStops) return;
+        // Stopping removes every running script right after this, so start the new ones on the next frame
+        runtime.once('BEFORE_EXECUTE', () => {
+            runtime.startHats('event_whenstopclicked');
+        });
+    });
+};
+
+/**
  * Add the block functions to a VM.
  * @param {VirtualMachine} vm The VM.
  */
@@ -222,6 +255,13 @@ const installCorePrimitives = vm => {
         vm.runtime._primitives[opcode] = fn;
         const list = STACK_OPCODES.includes(opcode) ? compatBlocks.stacked : compatBlocks.inputs;
         if (!list.includes(opcode)) list.push(opcode);
+    }
+    installStopHat(vm.runtime);
+    // The pause button starts these itself; see pause-scripts.js
+    if (!vm.runtime._hats.event_whenpauseclicked) {
+        vm.runtime._hats.event_whenpauseclicked = {
+            restartExistingThreads: true
+        };
     }
     patchCompiler();
 };
@@ -272,6 +312,33 @@ const defineCoreBlocks = ScratchBlocks => {
         numberInput('X'),
         numberInput('Y')
     ]));
+
+    define('event_whenstopclicked', block => ({
+        // Same words as "when green flag clicked", so it's translated too
+        message0: ScratchBlocks.Msg.EVENT_WHENFLAGCLICKED,
+        args0: [{
+            type: 'field_image',
+            src: media(block, 'icons/control_stop.svg'),
+            width: 24,
+            height: 24,
+            alt: 'stop'
+        }],
+        category: ScratchBlocks.Categories.event,
+        extensions: ['colours_event', 'shape_hat']
+    }));
+
+    define('event_whenpauseclicked', block => ({
+        message0: ScratchBlocks.Msg.EVENT_WHENFLAGCLICKED,
+        args0: [{
+            type: 'field_image',
+            src: media(block, 'icons/event_whenpauseclicked.svg'),
+            width: 24,
+            height: 24,
+            alt: 'pause'
+        }],
+        category: ScratchBlocks.Categories.event,
+        extensions: ['colours_event', 'shape_hat']
+    }));
 
     define('control_repeatForSeconds', block => ({
         message0: 'repeat for %1 seconds',

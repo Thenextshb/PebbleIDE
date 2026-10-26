@@ -1,6 +1,7 @@
 import LazyScratchBlocks from './tw-lazy-scratch-blocks';
 import {defaultBlockColors} from './themes';
 import {appendToCategory, takeExpansionBlocks} from './pebble-expansions/info';
+import {sortCategories} from './pebble-category-order';
 
 const categorySeparator = '<sep gap="36"/>';
 
@@ -360,6 +361,8 @@ const events = function (isInitialSetup, isStage, targetId, colors) {
     return `
     <category name="%{BKY_CATEGORY_EVENTS}" id="events" colour="${colors.primary}" secondaryColour="${colors.tertiary}">
         <block type="event_whenflagclicked"/>
+        <block type="event_whenstopclicked"/>
+        <block type="event_whenpauseclicked"/>
         <block type="event_whenkeypressed">
         </block>
         ${isStage ? `
@@ -765,6 +768,7 @@ const xmlClose = '</xml>';
  * @param {?string} targetId - The current editing target
  * @param {?Array.<object>} categoriesXML - optional array of `{id,xml}` for categories. This can include both core
  * and other extensions: core extensions will be placed in the normal Scratch order; others will go at the bottom.
+ * Categories the user has moved by dragging them go where they were moved to.
  * @property {string} id - the extension / category ID.
  * @property {string} xml - the `<category>...</category>` XML for this extension / category.
  * @param {?string} costumeName - The name of the default selected costume dropdown.
@@ -827,27 +831,29 @@ const makeToolboxXML = function (isInitialSetup, isStage = true, targetId, categ
         turbowarpXML = turbowarpXML.replace('<block', `${extraTurboWarpBlocks}<block`);
     }
 
-    const everything = [
-        xmlOpen,
-        motionXML, gap,
-        looksXML, gap,
-        soundXML, gap,
-        eventsXML, gap,
-        controlXML, gap,
-        sensingXML, gap,
-        operatorsXML, gap,
-        variablesXML, gap,
-        myBlocksXML
+    const categories = [
+        {id: 'motion', xml: motionXML},
+        {id: 'looks', xml: looksXML},
+        {id: 'sound', xml: soundXML},
+        {id: 'events', xml: eventsXML},
+        {id: 'control', xml: controlXML},
+        {id: 'sensing', xml: sensingXML},
+        {id: 'operators', xml: operatorsXML},
+        {id: 'variables', xml: variablesXML},
+        {id: 'myBlocks', xml: myBlocksXML}
     ];
 
     if (turbowarpXML) {
-        everything.push(gap, turbowarpXML);
+        categories.push({id: 'tw', xml: turbowarpXML});
     }
 
-    for (const extensionCategory of categoriesXML) {
-        everything.push(gap, extensionCategory.xml);
-    }
+    categories.push(...categoriesXML);
 
+    const everything = [xmlOpen];
+    sortCategories(categories).forEach((category, index) => {
+        if (index > 0) everything.push(gap);
+        everything.push(category.xml);
+    });
     everything.push(xmlClose);
     return everything.join('\n');
 };

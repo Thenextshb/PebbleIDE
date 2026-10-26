@@ -141,6 +141,7 @@ const GUIComponent = props => {
         onShare,
         onShowPrivacyPolicy,
         onStartSelectingFileUpload,
+        onTabPointerDown,
         onTelemetryModalCancel,
         onTelemetryModalOptIn,
         onTelemetryModalOptOut,
@@ -150,6 +151,7 @@ const GUIComponent = props => {
         showSaveFilePicker,
         soundsTabVisible,
         stageSizeMode,
+        tabOrder,
         targetIsStage,
         telemetryModalVisible,
         theme,
@@ -177,6 +179,8 @@ const GUIComponent = props => {
         tabPanelSelected: classNames(tabStyles.reactTabsTabPanelSelected, styles.isSelected),
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
     };
+    // The tabs stay in the same order on the page (so tab 0 is always Code), and CSS shows them in the user's order
+    const getTabClassName = tab => classNames(tabClassNames.tab, styles[`tabPosition${tabOrder.indexOf(tab) + 1}`]);
 
     const unconstrainedWidth = (
         UNCONSTRAINED_NON_STAGE_WIDTH +
@@ -343,8 +347,11 @@ const GUIComponent = props => {
                                 selectedTabPanelClassName={tabClassNames.tabPanelSelected}
                                 onSelect={onActivateTab}
                             >
-                                <TabList className={tabClassNames.tabList}>
-                                    <Tab className={tabClassNames.tab}>
+                                <TabList
+                                    className={tabClassNames.tabList}
+                                    onPointerDown={onTabPointerDown}
+                                >
+                                    <Tab className={getTabClassName(0)}>
                                         <img
                                             draggable={false}
                                             src={codeIcon()}
@@ -356,7 +363,7 @@ const GUIComponent = props => {
                                         />
                                     </Tab>
                                     <Tab
-                                        className={tabClassNames.tab}
+                                        className={getTabClassName(1)}
                                         onClick={onActivateCostumesTab}
                                     >
                                         <img
@@ -378,7 +385,7 @@ const GUIComponent = props => {
                                         )}
                                     </Tab>
                                     <Tab
-                                        className={tabClassNames.tab}
+                                        className={getTabClassName(2)}
                                         onClick={onActivateSoundsTab}
                                     >
                                         <img
@@ -523,6 +530,7 @@ GUIComponent.propTypes = {
     onShare: PropTypes.func,
     onShowPrivacyPolicy: PropTypes.func,
     onStartSelectingFileUpload: PropTypes.func,
+    onTabPointerDown: PropTypes.func,
     onTabSelect: PropTypes.func,
     onTelemetryModalCancel: PropTypes.func,
     onTelemetryModalOptIn: PropTypes.func,
@@ -535,6 +543,7 @@ GUIComponent.propTypes = {
     showSaveFilePicker: PropTypes.func,
     soundsTabVisible: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
+    tabOrder: PropTypes.arrayOf(PropTypes.number),
     targetIsStage: PropTypes.bool,
     telemetryModalVisible: PropTypes.bool,
     theme: PropTypes.instanceOf(Theme),
@@ -569,7 +578,8 @@ GUIComponent.defaultProps = {
     isTotallyNormal: false,
     loading: false,
     showComingSoon: false,
-    stageSizeMode: STAGE_SIZE_MODES.large
+    stageSizeMode: STAGE_SIZE_MODES.large,
+    tabOrder: [0, 1, 2]
 };
 
 const mapStateToProps = state => ({

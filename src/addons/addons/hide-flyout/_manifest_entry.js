@@ -21,6 +21,7 @@ const manifest = {
     }
   ],
   "dynamicDisable": true,
+  "enabledByDefault": true,
   "customCssVariables": [
     {
       "name": "lockDisplay",

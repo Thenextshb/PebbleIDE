@@ -74,7 +74,7 @@ const base = {
             test: /\.jsx?$/,
             loader: 'babel-loader',
             // Already-built library, too big for babel
-            exclude: /pebble-expansions[\/]vendor/,
+            exclude: /pebble-expansions[/\\]vendor/,
             include: [
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,

@@ -1,3 +1,4 @@
+import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {compose} from 'redux';
@@ -27,6 +28,8 @@ import {
     closeTelemetryModal,
     openExtensionChooserModal
 } from '../reducers/modals';
+import {setTabOrder} from '../reducers/tw';
+import {startReorder, moveItem} from '../lib/pebble-drag-reorder';
 
 import FontLoaderHOC from '../lib/font-loader-hoc.jsx';
 import LocalizationHOC from '../lib/localization-hoc.jsx';
@@ -56,6 +59,12 @@ const setProjectIdMetadata = projectId => {
 };
 
 class GUI extends React.Component {
+    constructor (props) {
+        super(props);
+        bindAll(this, [
+            'handleTabPointerDown'
+        ]);
+    }
     componentDidMount () {
         setIsScratchDesktop(this.props.isScratchDesktop);
         this.props.onStorageInit(storage);
@@ -74,6 +83,17 @@ class GUI extends React.Component {
             // At this time the project view in www doesn't need to know when a project is unloaded
             this.props.onProjectLoaded();
         }
+    }
+    handleTabPointerDown (e) {
+        // Hold down on a tab to move it somewhere else in the row
+        const tabs = Array.from(e.currentTarget.children);
+        const tabOrder = this.props.tabOrder;
+        startReorder(e, {
+            items: tabOrder.map(tab => tabs[tab]),
+            index: tabOrder.findIndex(tab => tabs[tab].contains(e.target)),
+            axis: 'x',
+            onMove: (from, to) => this.props.onReorderTabs(moveItem(tabOrder, from, to))
+        });
     }
     render () {
         if (this.props.isError) {
@@ -95,6 +115,7 @@ class GUI extends React.Component {
             isScratchDesktop,
             isShowingProject,
             onProjectLoaded,
+            onReorderTabs,
             onStorageInit,
             onUpdateProjectId,
             onVmInit,
@@ -110,6 +131,7 @@ class GUI extends React.Component {
         return (
             <GUIComponent
                 loading={fetchingProject || isLoading || loadingStateVisible}
+                onTabPointerDown={this.handleTabPointerDown}
                 {...componentProps}
             >
                 {children}
@@ -136,9 +158,11 @@ GUI.propTypes = {
     onSeeCommunity: PropTypes.func,
     onStorageInit: PropTypes.func,
     onUpdateProjectId: PropTypes.func,
+    onReorderTabs: PropTypes.func,
     onVmInit: PropTypes.func,
     projectHost: PropTypes.string,
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    tabOrder: PropTypes.arrayOf(PropTypes.number),
     telemetryModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
@@ -173,6 +197,7 @@ const mapStateToProps = state => {
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         projectId: state.scratchGui.projectState.projectId,
         soundsTabVisible: state.scratchGui.editorTab.activeTabIndex === SOUNDS_TAB_INDEX,
+        tabOrder: state.scratchGui.tw.tabOrder,
         targetIsStage: (
             state.scratchGui.targets.stage &&
             state.scratchGui.targets.stage.id === state.scratchGui.targets.editingTarget
@@ -198,7 +223,8 @@ const mapDispatchToProps = dispatch => ({
     onActivateSoundsTab: () => dispatch(activateTab(SOUNDS_TAB_INDEX)),
     onRequestCloseBackdropLibrary: () => dispatch(closeBackdropLibrary()),
     onRequestCloseCostumeLibrary: () => dispatch(closeCostumeLibrary()),
-    onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal())
+    onRequestCloseTelemetryModal: () => dispatch(closeTelemetryModal()),
+    onReorderTabs: tabOrder => dispatch(setTabOrder(tabOrder))
 });
 
 const ConnectedGUI = injectIntl(connect(

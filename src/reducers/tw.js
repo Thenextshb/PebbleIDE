@@ -18,6 +18,7 @@ const SET_CLOUD_HOST = 'tw/SET_CLOUD_HOST';
 const SET_PLATFORM_MISMATCH_DETAILS = 'tw/SET_PLATFORM_MISMATCH_DETAILS';
 const SET_PROJECT_ERROR = 'tw/SET_PROJECT_ERROR';
 const SET_SPRITE_LIST_VIEW = 'tw/SET_SPRITE_LIST_VIEW';
+const SET_TAB_ORDER = 'tw/SET_TAB_ORDER';
 
 // PebbleIDE shows sprites as a list by default; the choice is remembered in the browser
 const SPRITE_LIST_VIEW_KEY = 'pebble:spriteListView';
@@ -27,6 +28,23 @@ const getStoredSpriteListView = () => {
     } catch (e) {
         return true;
     }
+};
+
+// The Code, Costumes and Sounds tabs can be dragged into a different order, which is remembered too.
+// Each entry is a tab's index (0 = Code, 1 = Costumes, 2 = Sounds) in the order the tabs are shown.
+const TAB_ORDER_KEY = 'pebble:tabOrder';
+const DEFAULT_TAB_ORDER = [0, 1, 2];
+const getStoredTabOrder = () => {
+    try {
+        const order = JSON.parse(localStorage.getItem(TAB_ORDER_KEY));
+        if (Array.isArray(order) && order.length === DEFAULT_TAB_ORDER.length &&
+            DEFAULT_TAB_ORDER.every(tab => order.includes(tab))) {
+            return order;
+        }
+    } catch (e) {
+        // ignore
+    }
+    return DEFAULT_TAB_ORDER;
 };
 
 export const initialState = {
@@ -64,7 +82,8 @@ export const initialState = {
         callback: null
     },
     projectError: null,
-    spriteListView: getStoredSpriteListView()
+    spriteListView: getStoredSpriteListView(),
+    tabOrder: getStoredTabOrder()
 };
 
 const reducer = function (state, action) {
@@ -89,6 +108,10 @@ const reducer = function (state, action) {
     case SET_SPRITE_LIST_VIEW:
         return Object.assign({}, state, {
             spriteListView: action.spriteListView
+        });
+    case SET_TAB_ORDER:
+        return Object.assign({}, state, {
+            tabOrder: action.tabOrder
         });
     case SET_USERNAME:
         return Object.assign({}, state, {
@@ -201,6 +224,18 @@ const setSpriteListView = function (spriteListView) {
     };
 };
 
+const setTabOrder = function (tabOrder) {
+    try {
+        localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(tabOrder));
+    } catch (e) {
+        // ignore
+    }
+    return {
+        type: SET_TAB_ORDER,
+        tabOrder
+    };
+};
+
 const setUsername = function (username) {
     return {
         type: SET_USERNAME,
@@ -308,6 +343,7 @@ const setProjectError = function (projectError) {
 
 export {
     setSpriteListView,
+    setTabOrder,
     reducer as default,
     initialState as twInitialState,
     setFramerateState,

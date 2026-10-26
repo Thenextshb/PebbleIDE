@@ -1,4 +1,5 @@
 import EventTarget from "../../event-target.js"; /* inserted by pull.js */
+import { startPauseScripts } from "../../../lib/pebble-expansions/pause-scripts.js"; /* PebbleIDE */
 
 // https://github.com/scratchfoundation/scratch-vm/blob/bb352913b57991713a5ccf0b611fda91056e14ec/src/engine/thread.js#L198
 const STATUS_RUNNING = 0;
@@ -14,6 +15,9 @@ let pausedThreadState = new WeakMap();
 let pauseNewThreads = false;
 
 let steppingThread = null;
+
+// PebbleIDE: "when pause clicked" scripts keep running until they're done, then the project fully pauses
+let pauseScripts = [];
 
 const eventTarget = new EventTarget();
 
@@ -97,6 +101,19 @@ const stepUnsteppedThreads = (lastSteppedThread) => {
 export const setPaused = (_paused) => {
   const didChange = paused !== _paused;
   if (didChange) {
+    // PebbleIDE: start these while new scripts are still allowed to start
+    if (_paused) {
+      const scripts = startPauseScripts(vm.runtime, () => {
+        // Finish pausing, unless the project was unpaused (or paused again) in the meantime
+        if (paused && pauseScripts === scripts) {
+          pauseScripts = [];
+          setPaused(true);
+        }
+      });
+      pauseScripts = scripts;
+    } else {
+      pauseScripts = [];
+    }
     paused = _paused;
     eventTarget.dispatchEvent(new CustomEvent("change"));
 
@@ -110,13 +127,18 @@ export const setPaused = (_paused) => {
 
   // Don't check didChange as new threads could've started that we need to pause.
   if (paused) {
-    audioContextStateChange = audioContextStateChange.then(() => {
-      return vm.runtime.audioEngine.audioContext.suspend();
-    });
-    if (!vm.runtime.ioDevices.clock._paused) {
-      vm.runtime.ioDevices.clock.pause();
+    // PebbleIDE: sounds and the timer keep going until the "when pause clicked" scripts are done
+    if (pauseScripts.length === 0) {
+      audioContextStateChange = audioContextStateChange.then(() => {
+        return vm.runtime.audioEngine.audioContext.suspend();
+      });
+      if (!vm.runtime.ioDevices.clock._paused) {
+        vm.runtime.ioDevices.clock.pause();
+      }
     }
-    vm.runtime.threads.forEach(pauseThread);
+    vm.runtime.threads.forEach((thread) => {
+      if (!pauseScripts.includes(thread)) pauseThread(thread);
+    });
 
     const activeThread = vm.runtime.sequencer.activeThread;
     if (activeThread) {
@@ -130,7 +152,10 @@ export const setPaused = (_paused) => {
     audioContextStateChange = audioContextStateChange.then(() => {
       return vm.runtime.audioEngine.audioContext.resume();
     });
-    vm.runtime.ioDevices.clock.resume();
+    // PebbleIDE: the timer isn't paused yet if "when pause clicked" scripts were still running
+    if (vm.runtime.ioDevices.clock._paused) {
+      vm.runtime.ioDevices.clock.resume();
+    }
     for (const thread of vm.runtime.threads) {
       const pauseState = pausedThreadState.get(thread);
       if (pauseState) {
