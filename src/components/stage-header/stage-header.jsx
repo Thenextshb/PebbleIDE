@@ -20,6 +20,7 @@ import fullStageIcon from '!../../lib/tw-recolor/build!./icon--full-stage.svg';
 import spriteListIcon from '!../../lib/tw-recolor/build!./icon--sprite-list.svg';
 import settingsIcon from './icon--settings.svg';
 
+import ThumbnailButton from '../pebble-projects/thumbnail-button.jsx';
 import styles from './stage-header.css';
 
 import FullscreenAPI from '../../lib/tw-fullscreen-api';
@@ -236,6 +237,9 @@ const StageHeaderComponent = function (props) {
                         className={styles.stageSizeRow}
                         key="editor" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
+                        {isPlayerOnly ? null : (
+                            <ThumbnailButton compact={stageSizeMode === STAGE_SIZE_MODES.small} />
+                        )}
                         {spriteListToggle}
                         {stageControls}
                         <div>

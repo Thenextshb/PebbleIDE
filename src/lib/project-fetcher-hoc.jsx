@@ -19,9 +19,11 @@ import {
     activateTab,
     BLOCKS_TAB_INDEX
 } from '../reducers/editor-tab';
+import {setProjectTitle} from '../reducers/project-title';
 
 import log from './log';
 import storage from './storage';
+import {PROJECTS_ENABLED, getProject, openProject} from './pebble-projects';
 
 import VM from 'scratch-vm';
 /* Higher Order Component to provide behavior for loading projects by id. If
@@ -79,14 +81,25 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             this.props.vm.clear();
             this.props.vm.quit();
 
-            // PebbleIDE doesn't open Scratch projects or projects from a URL, only the built-in default
-            // project. Other projects are opened with File > Load from your computer.
+            // PebbleIDE doesn't open Scratch projects or projects from a URL. Numbers are projects shared on
+            // PebbleIDE (see storage.js); 0 is the built-in default project.
+            const isShared = PROJECTS_ENABLED && /^[1-9]\d*$/.test(projectId);
+            openProject.set(null);
             return storage.load(storage.AssetType.Project, projectId, storage.DataFormat.JSON)
                 .then(projectAsset => {
                     if (!projectAsset) {
                         throw new Error('Could not find project');
                     }
                     this.props.onFetchedProjectData(projectAsset.data, loadingState);
+                    if (isShared) {
+                        // Its name, and whether it's yours to update
+                        getProject(projectId)
+                            .then(project => {
+                                openProject.set(project);
+                                this.props.onSetProjectTitle(project.title);
+                            })
+                            .catch(error => log.error(error));
+                    }
                 })
                 .catch(err => {
                     this.props.onError(err);
@@ -104,6 +117,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 onError: onErrorProp,
                 onFetchedProjectData: onFetchedProjectDataProp,
                 onProjectUnchanged,
+                onSetProjectTitle,
                 projectHost,
                 projectId,
                 reduxProjectId,
@@ -133,6 +147,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: PropTypes.func,
         onFetchedProjectData: PropTypes.func,
         onProjectUnchanged: PropTypes.func,
+        onSetProjectTitle: PropTypes.func,
         projectHost: PropTypes.string,
         projectToken: PropTypes.string,
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -160,7 +175,8 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onFetchedProjectData: (projectData, loadingState) =>
             dispatch(onFetchedProjectData(projectData, loadingState)),
         setProjectId: projectId => dispatch(setProjectId(projectId)),
-        onProjectUnchanged: () => dispatch(setProjectUnchanged())
+        onProjectUnchanged: () => dispatch(setProjectUnchanged()),
+        onSetProjectTitle: title => dispatch(setProjectTitle(title))
     });
     // Allow incoming props to override redux-provided props. Used to mock in tests.
     const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(

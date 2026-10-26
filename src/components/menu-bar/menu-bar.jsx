@@ -113,6 +113,8 @@ import oldtimeyLogo from './oldtimey-logo.svg';
 import sharedMessages from '../../lib/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
+import AccountButton from '../pebble-account/account-button.jsx';
+import UploadButton from '../pebble-projects/upload-button.jsx';
 
 const ariaMessages = defineMessages({
     tutorials: {
@@ -1005,6 +1007,19 @@ class MenuBar extends React.Component {
                             </Button>
                         </div>
                     )}
+                    <div className={classNames(styles.menuBarItem, styles.accountButtonWrapper)}>
+                        <UploadButton
+                            className={classNames(styles.menuBarButton, communityButtonStyles.communityButton)}
+                            iconClassName={communityButtonStyles.communityButtonIcon}
+                        />
+                    </div>
+                    <div className={classNames(styles.menuBarItem, styles.accountButtonWrapper)}>
+                        <AccountButton
+                            profileInNewTab
+                            className={classNames(styles.menuBarButton, communityButtonStyles.communityButton)}
+                            iconClassName={communityButtonStyles.communityButtonIcon}
+                        />
+                    </div>
                 </div>
 
                 {aboutButton}

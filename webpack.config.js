@@ -15,6 +15,10 @@ const STATIC_PATH = process.env.STATIC_PATH || '/static';
 const {APP_NAME} = require('./src/lib/brand');
 
 const root = process.env.ROOT || '';
+
+// Accounts, profiles and shared projects. They hide themselves on a site without the account server
+// (see server/SETUP.md), and building with PEBBLE_ACCOUNTS=false leaves them out completely.
+const enableAccounts = process.env.PEBBLE_ACCOUNTS !== 'false';
 if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
@@ -40,6 +44,10 @@ const base = {
         headers: {
             // Enable SharedArrayBuffer
             'Document-Isolation-Policy': 'isolate-and-credentialless'
+        },
+        // The account server, started with "npm run start:api"
+        proxy: {
+            '/api': 'http://localhost:8788'
         },
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
@@ -160,6 +168,10 @@ module.exports = [
     defaultsDeep({}, base, {
         entry: {
             'home': './src/playground/home.jsx',
+            ...(enableAccounts ? {
+                profile: './src/playground/profile.jsx',
+                project: './src/playground/project.jsx'
+            } : {}),
             'editor': './src/playground/editor.jsx',
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
@@ -198,7 +210,8 @@ module.exports = [
                 'process.env.ENABLE_SERVICE_WORKER': JSON.stringify(process.env.ENABLE_SERVICE_WORKER || ''),
                 'process.env.ROOT': JSON.stringify(root),
                 'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash'),
-                'process.env.ENABLE_WINDCHIMES': JSON.stringify(process.env.ENABLE_WINDCHIMES || '')
+                'process.env.ENABLE_WINDCHIMES': JSON.stringify(process.env.ENABLE_WINDCHIMES || ''),
+                'process.env.PEBBLE_ACCOUNTS': JSON.stringify(enableAccounts ? 'true' : '')
             }),
             // The home page; the editor is editor.html
             new HtmlWebpackPlugin({
@@ -208,6 +221,22 @@ module.exports = [
                 title: `${APP_NAME} - Make games, animations and apps with blocks`,
                 ...htmlWebpackPluginCommon
             }),
+            ...(enableAccounts ? [
+                new HtmlWebpackPlugin({
+                    chunks: ['profile'],
+                    template: 'src/playground/home.ejs',
+                    filename: 'profile.html',
+                    title: `Profile - ${APP_NAME}`,
+                    ...htmlWebpackPluginCommon
+                }),
+                new HtmlWebpackPlugin({
+                    chunks: ['project'],
+                    template: 'src/playground/home.ejs',
+                    filename: 'project.html',
+                    title: `Project - ${APP_NAME}`,
+                    ...htmlWebpackPluginCommon
+                })
+            ] : []),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',

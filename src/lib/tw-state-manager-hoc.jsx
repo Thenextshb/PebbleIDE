@@ -20,6 +20,7 @@ import {
 import {generateRandomUsername} from './tw-username';
 import {setSearchParams} from './tw-navigation-utils';
 import {defaultStageSize} from '../reducers/custom-stage-size';
+import {PROJECTS_ENABLED} from './pebble-projects';
 
 /* eslint-disable no-alert */
 
@@ -498,8 +499,9 @@ const TWStateManager = function (WrappedComponent) {
             this.router.onpathchange();
         }
         onSetProjectId (id) {
-            // PebbleIDE doesn't open Scratch projects from the address bar
-            if (`${id}` !== defaultProjectId) {
+            // PebbleIDE doesn't open Scratch projects from the address bar. Numbers in it are projects
+            // shared on PebbleIDE (see storage.js).
+            if (`${id}` !== defaultProjectId && !PROJECTS_ENABLED) {
                 return false;
             }
             if (`${id}` === `${this.props.reduxProjectId}`) {

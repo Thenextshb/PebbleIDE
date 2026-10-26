@@ -2,6 +2,7 @@ import ScratchStorage from '@turbowarp/scratch-storage';
 
 import defaultProject from './default-project';
 import {getLibraryAssetURL} from './libraries/pebble-github-library';
+import {getProjectFileURL} from './pebble-projects';
 
 /**
  * Wrapper for ScratchStorage which adds default web sources.
@@ -11,6 +12,8 @@ class Storage extends ScratchStorage {
     constructor () {
         super();
         this.cacheDefaultProject();
+        // Projects shared on PebbleIDE
+        this.addWebStore([this.AssetType.Project], asset => getProjectFileURL(asset.assetId));
     }
     addOfficialScratchWebStores () {
         this.addWebStore(

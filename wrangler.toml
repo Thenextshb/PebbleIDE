@@ -1,0 +1,28 @@
+# Cloudflare settings for PebbleIDE. See server/SETUP.md for how to set it up and deploy.
+
+# The Worker that hosts pebbleide.com
+name = "pebble-ide"
+main = "server/worker.js"
+compatibility_date = "2025-09-01"
+
+# The site's files. Cloudflare serves them directly; the Worker only runs for /api/.
+[assets]
+directory = "./build"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+# Where accounts are stored. database_id comes from "npx wrangler d1 create pebbleide-accounts".
+[[d1_databases]]
+binding = "DB"
+database_name = "pebbleide-accounts"
+database_id = "1f3260d0-401a-4c4b-b50d-b7da14438669"
+migrations_dir = "server/migrations"
+
+# Where shared project files and thumbnails are kept: a KV namespace (free, 1 GB).
+# To move to R2 later, see server/SETUP.md.
+[[kv_namespaces]]
+binding = "PROJECT_FILES_KV"
+id = "16463a7429d84970bfa81398d0ef40ea"
+
+[vars]
+EMAIL_FROM = "PebbleIDE <accounts@pebbleide.com>"

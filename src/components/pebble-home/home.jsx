@@ -9,11 +9,11 @@ import {
     hasGitHub
 } from '../../lib/pebble-github';
 import pebbleLogo from '../menu-bar/pebble-logo.svg';
+import SiteBar, {EDITOR_URL, PACKAGER_URL} from './site-bar.jsx';
+import HomeProjects, {getSearchQuery} from '../pebble-projects/home-projects.jsx';
 
 import styles from './home.css';
 
-const EDITOR_URL = 'editor.html';
-const PACKAGER_URL = 'packager/';
 const CREDITS_URL = 'credits.html';
 // At the top of the repository so it's easy to find and edit on GitHub
 const NEWS_FILE = 'news.txt';
@@ -350,53 +350,9 @@ class Home extends React.Component {
     render () {
         return (
             <div className={styles.page}>
-                <header className={styles.bar}>
-                    <nav className={styles.barBox}>
-                        <a
-                            className={styles.brand}
-                            href="./"
-                        >
-                            <img
-                                alt=""
-                                className={styles.brandLogo}
-                                src={pebbleLogo}
-                            />
-                            <span className={styles.brandName}>{APP_NAME}</span>
-                        </a>
-                        <a
-                            className={styles.barLink}
-                            href={EDITOR_URL}
-                        >
-                            {'Create'}
-                        </a>
-                        <a
-                            className={styles.barLink}
-                            href={PACKAGER_URL}
-                        >
-                            {'Packager'}
-                        </a>
-                        {hasGitHub() && (
-                            <a
-                                className={styles.barLink}
-                                href={getGitHubRepoURL()}
-                                rel="noreferrer"
-                                target="_blank"
-                            >
-                                {'GitHub'}
-                            </a>
-                        )}
-                    </nav>
-                    <div className={styles.barBox}>
-                        <a
-                            className={styles.barButton}
-                            href={EDITOR_URL}
-                        >
-                            {'Start creating'}
-                        </a>
-                    </div>
-                </header>
+                <SiteBar />
 
-                <section className={styles.hero}>
+                {!getSearchQuery() && <section className={styles.hero}>
                     <div
                         aria-hidden="true"
                         className={styles.heroRings}
@@ -422,7 +378,9 @@ class Home extends React.Component {
                             {'Package a project'}
                         </a>
                     </div>
-                </section>
+                </section>}
+
+                <HomeProjects />
 
                 <main className={styles.content}>
                     <section className={styles.news}>

@@ -26,3 +26,7 @@ npm-*
 
 # for act
 .secrets
+
+# Cloudflare (local account server data and settings)
+/.wrangler
+.dev.vars

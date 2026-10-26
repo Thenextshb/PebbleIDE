@@ -52,7 +52,8 @@
 }
 
 /* A box with no button in it shouldn't show */
-.menu-bar-item.community-button-wrapper:empty {
+.menu-bar-item.community-button-wrapper:empty,
+.menu-bar-item.account-button-wrapper:empty {
     display: none;
 }
 
