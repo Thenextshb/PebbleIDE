@@ -1,0 +1,21 @@
+{
+  "short_name": "PebbleIDE",
+  "name": "PebbleIDE",
+  "description": "Online block coding IDE that compiles projects to JavaScript so they run faster. Based on TurboWarp.",
+  "icons": [
+    {
+      "src": "images/192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "images/512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#333333",
+  "display": "standalone",
+  "theme_color": "#333333"
+}

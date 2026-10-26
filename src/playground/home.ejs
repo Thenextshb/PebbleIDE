@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html data-theme="grey">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="<%= htmlWebpackPlugin.options.APP_NAME %> is a free, open source place to make games, animations and apps with blocks." />
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="apple-touch-icon" href="<%= htmlWebpackPlugin.options.root %>images/apple-touch-icon.png">
+    <% if (htmlWebpackPlugin.options.root === "/" || htmlWebpackPlugin.options.root === "") { %>
+      <link rel="manifest" href="<%= htmlWebpackPlugin.options.root %>manifest.webmanifest">
+    <% } %>
+    <script>
+      // Use the same light, grey or dark mode as the editor, before anything is drawn
+      (function () {
+        var theme = 'grey';
+        try {
+          var setting = localStorage.getItem('tw:theme');
+          if (setting === 'light' || setting === 'dark') {
+            theme = setting;
+          } else if (setting) {
+            var parsed = JSON.parse(setting);
+            if (parsed.gui === 'light' || parsed.gui === 'dark' || parsed.gui === 'grey') {
+              theme = parsed.gui;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <h1><%= htmlWebpackPlugin.options.APP_NAME %> requires JavaScript</h1>
+    </noscript>
+    <div id="app"></div>
+  </body>
+</html>

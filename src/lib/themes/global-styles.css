@@ -1,0 +1,63 @@
+@import "../../css/colors.css";
+
+/* This is for overriding some styles that don't really "belong" to any existing stylesheets */
+/* Try to use this sparingly, otherwise this will become unmaintainable again... */
+
+:root {
+    color-scheme: var(--color-scheme);
+}
+
+/* popover is used by gui and paint */
+/* some of these are duplicated over there too; !important makes sure these win */
+:global(.Popover) {
+    color-scheme: light !important;
+}
+:global(.Popover-body) {
+    color: $text-primary !important;
+    background: $popover-background !important;
+    border: 1px solid $ui-black-transparent !important;
+    box-shadow: 0px 0px 8px 1px $shadow !important;
+}
+:global(.Popover-tipShape) {
+    fill: $popover-background !important;
+    stroke: $ui-black-transparent !important;
+}
+
+/* ScratchAdddons editor-dark-mode compatibility */
+:root {
+    --editorDarkMode-primary: $looks-secondary;
+    --editorDarkMode-primary-transparent35: $looks-transparent;
+    --editorDarkMode-primary-variant: $looks-secondary-dark;
+    --editorDarkMode-border: $ui-black-transparent;
+    --editorDarkMode-accent: $ui-modal-background;
+    --editorDarkMode-categoryMenu-text: $text-primary;
+    --editorDarkMode-accent-text: $text-primary;
+    --editorDarkMode-page: $ui-primary;
+    --editorDarkMode-highlightText: $looks-secondary;
+}
+
+/* The paint editor (scratch-paint) draws white text and icons on the accent color, which can't be */
+/* seen when the accent is white. These use the accent's own text and icon colors instead. */
+[class*="paint-editor_bitmap-button_"] {
+    color: $accent-foreground !important;
+}
+[class*="paint-editor_bitmap-button-icon_"] {
+    filter: $accent-icon-filter;
+}
+[class*="tool-select-base_is-selected_"] [class*="tool-select-base_tool-select-icon_"] {
+    filter: brightness(0) invert(1) $accent-icon-filter !important;
+}
+[class*="font-dropdown_mod-menu-item_"]:hover {
+    color: $accent-foreground !important;
+}
+
+/* Custom block colors: keep the text readable on the color the user picked */
+:global(.pebble-custom-block-light-text) > :global(.blocklyText),
+:global(.pebble-custom-block-light-text) > :global(.blocklyEditableText) > :global(.blocklyText) {
+    fill: #ffffff;
+}
+
+:global(.pebble-custom-block-dark-text) > :global(.blocklyText),
+:global(.pebble-custom-block-dark-text) > :global(.blocklyEditableText) > :global(.blocklyText) {
+    fill: #282833;
+}

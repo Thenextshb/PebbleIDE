@@ -1,0 +1,14 @@
+@import "../../css/colors.css";
+
+.save-now {
+    cursor: pointer;
+    padding: 0 0.75rem;
+    height: 100%;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.save-now:hover {
+    background-color: $ui-black-transparent;
+}

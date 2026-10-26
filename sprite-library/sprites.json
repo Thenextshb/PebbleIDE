@@ -1,0 +1,36 @@
+[
+    {
+        "isStage": false,
+        "name": "Pebble",
+        "variables": {},
+        "lists": {},
+        "broadcasts": {},
+        "blocks": {},
+        "comments": {},
+        "currentCostume": 0,
+        "costumes": [
+            {
+                "name": "Pebble",
+                "bitmapResolution": 1,
+                "dataFormat": "svg",
+                "assetId": "67cc48c0d6fbea6766f6cde815eccbe9",
+                "md5ext": "67cc48c0d6fbea6766f6cde815eccbe9.svg",
+                "rotationCenterX": 47.845375240452796,
+                "rotationCenterY": 32.00581661396899
+            }
+        ],
+        "sounds": [],
+        "volume": 100,
+        "visible": true,
+        "x": 0,
+        "y": 0,
+        "size": 100,
+        "direction": 90,
+        "draggable": false,
+        "rotationStyle": "all around",
+        "tags": [
+            "pebble",
+            "rock"
+        ]
+    }
+]

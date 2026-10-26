@@ -1,0 +1,111 @@
+@import "../../css/colors.css";
+
+.modal-content {
+    width: 480px;
+    max-width: calc(100vw - 2rem);
+}
+
+.body {
+    background: $ui-modal-background;
+    color: $text-primary;
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.help-text {
+    margin: 0 0 0.75rem;
+}
+
+.formats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.format {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.format:hover {
+    background: $looks-light-transparent;
+}
+
+.format.selected {
+    border-color: $looks-secondary;
+    background: $looks-light-transparent;
+}
+
+.format input {
+    margin: 0.2rem 0 0;
+    accent-color: $looks-secondary;
+}
+
+.format-name {
+    font-weight: bold;
+}
+
+.format-extension {
+    margin-left: 0.4rem;
+    font-weight: normal;
+    opacity: 0.7;
+}
+
+.format-description {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 0.15rem;
+}
+
+.scratch-check {
+    font-size: 0.8rem;
+    margin: -0.25rem 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: $ui-black-transparent;
+}
+
+.scratch-check ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.button-row {
+    font-weight: bolder;
+    text-align: right;
+}
+
+.button-row button {
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    background: white;
+    border: 1px solid $ui-black-transparent;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+[dir="ltr"] .button-row button + button {
+    margin-left: 0.5rem;
+}
+
+[dir="rtl"] .button-row button + button {
+    margin-right: 0.5rem;
+}
+
+.button-row button.ok-button {
+    background: $looks-secondary;
+    border: $looks-secondary;
+    color: $accent-foreground;
+}
+
+.button-row button.cancel-button {
+    background: transparent;
+    color: $text-primary;
+}

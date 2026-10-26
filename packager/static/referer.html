@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PebbleIDE Packager Referer</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        <style>
+            :root {
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                color-scheme: dark;
+                background-color: #333333;
+                color: #e6e6e6;
+            }
+            a {
+                color: #ffffff;
+            }
+            main {
+                max-width: 480px;
+                margin: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <main>
+            <h1>PebbleIDE Packager Referer</h1>
+            <p>If you're seeing requests to your website with this page in their <code>Referer</code> header, someone is using a program they made with the <a href="./">PebbleIDE Packager</a> to interact with your website.</p>
+            <p hidden class="package-name-outer">The creator of the program set its package name to "<code class="package-name-value"></code>". They can set this to anything they want, so it may or may not be meaningful.</p>
+            <script>
+                var packageName = location.hash.substring(1);
+                if (packageName) {
+                    document.querySelector('.package-name-outer').hidden = false;
+                    document.querySelector('.package-name-value').textContent = packageName;
+                }
+            </script>
+            <p>The PebbleIDE Packager only turns projects into programs. It doesn't run them, and it can't tell you who is using a program or why.</p>
+        </main>
+    </body>
+</html>

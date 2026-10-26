@@ -1,0 +1,46 @@
+{
+    "https://extensions.penguinmod.com/extensions/AndrewGaming587/agBuffer.js": {
+        "name": "Array Buffers",
+        "reason": "Needs PenguinMod engine feature: registerSerializer"
+    },
+    "https://extensions.penguinmod.com/extensions/steve0greatness/timers.js": {
+        "name": "Extra Timers",
+        "reason": "Needs PenguinMod engine feature: registerVariable"
+    },
+    "https://extensions.penguinmod.com/extensions/DogeisCut/YetAnotherStringExtension.js": {
+        "name": "Yet Another String Extension",
+        "reason": "Needs PenguinMod engine feature: registerCompiledExtensionBlocks"
+    },
+    "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutRegularExpressions.js": {
+        "name": "Regular Expressions",
+        "reason": "Needs PenguinMod engine feature: registerSerializer"
+    },
+    "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutSet.js": {
+        "name": "Sets",
+        "reason": "Needs PenguinMod engine feature: registerSerializer"
+    },
+    "https://extensions.penguinmod.com/extensions/Div/divIterators.js": {
+        "name": "Iterators",
+        "reason": "Needs PenguinMod engine feature: registerSerializer"
+    },
+    "https://extensions.penguinmod.com/extensions/Div/divAlgEffects.js": {
+        "name": "Algebraic Effects",
+        "reason": "Needs PenguinMod engine features that PebbleIDE does not have"
+    },
+    "https://extensions.penguinmod.com/extensions/Div/divVecQuat.js": {
+        "name": "3D Vectors & Quaternions",
+        "reason": "Needs PenguinMod engine feature: registerCompiledExtensionBlocks"
+    },
+    "https://extensions.penguinmod.com/extensions/VeryGoodScratcher42/More-Types.js": {
+        "name": "More Types",
+        "reason": "Needs PenguinMod engine feature: registerCompiledExtensionBlocks"
+    },
+    "https://extensions.penguinmod.com/extensions/Fruits555000/PaintUtils.js": {
+        "name": "Paint Utils",
+        "reason": "Needs PenguinMod engine feature: registerSerializer"
+    },
+    "https://extensions.penguinmod.com/extensions/electricfuzzball_pm/MIDI.js": {
+        "name": "MIDI Controller",
+        "reason": "Needs PenguinMod block editor features that PebbleIDE does not have"
+    }
+}

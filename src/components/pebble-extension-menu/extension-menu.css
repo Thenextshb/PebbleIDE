@@ -1,0 +1,45 @@
+@import "../../css/colors.css";
+@import "../../css/z-index.css";
+
+.menu {
+    position: fixed;
+    z-index: $z-index-context-menu;
+    min-width: 11rem;
+    padding: 0.25rem 0;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.5rem;
+    background: $popover-background;
+    color: $text-primary;
+    box-shadow: 0 0 8px 1px $shadow;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.title {
+    padding: 0.4rem 1rem 0.3rem;
+    font-weight: bold;
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 16rem;
+}
+
+.item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+    background: $looks-secondary;
+    color: $accent-foreground;
+    outline: none;
+}

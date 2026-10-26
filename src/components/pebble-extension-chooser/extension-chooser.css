@@ -1,0 +1,70 @@
+@import "../../css/colors.css";
+
+.modal-content {
+    width: 440px;
+    max-width: calc(100vw - 2rem);
+}
+
+.body {
+    background: $ui-modal-background;
+    color: $text-primary;
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.help-text {
+    margin: 0 0 1rem;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.option:hover,
+.option:focus-visible {
+    border-color: $looks-secondary;
+    background: $looks-light-transparent;
+    outline: none;
+}
+
+.option-name {
+    font-weight: bold;
+}
+
+.option-description {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 0.2rem;
+}
+
+.button-row {
+    text-align: right;
+}
+
+.cancel-button {
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid $ui-black-transparent;
+    background: transparent;
+    color: $text-primary;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
