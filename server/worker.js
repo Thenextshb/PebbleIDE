@@ -5,6 +5,7 @@
 
 import {handleAccountRequest} from './accounts.js';
 import {handleProjectRequest} from './projects.js';
+import {handleReportRequest} from './reports.js';
 
 export default {
     fetch (request, env) {
@@ -19,6 +20,12 @@ export default {
             const parts = path.slice('/api/projects'.length).split('/')
                 .filter(Boolean);
             return handleProjectRequest(request, env, parts);
+        }
+        // /api/reports and /api/reports/<id>/resolve
+        if (path === '/api/reports' || path.startsWith('/api/reports/')) {
+            const parts = path.slice('/api/reports'.length).split('/')
+                .filter(Boolean);
+            return handleReportRequest(request, env, parts);
         }
         if (path.startsWith('/api/')) {
             return new Response(JSON.stringify({error: 'not-found', message: 'Not found.'}), {

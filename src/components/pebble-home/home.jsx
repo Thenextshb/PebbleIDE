@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -10,8 +11,10 @@ import {
 } from '../../lib/pebble-github';
 import pebbleLogo from '../menu-bar/pebble-logo.svg';
 import SiteBar, {EDITOR_URL, PACKAGER_URL} from './site-bar.jsx';
+import SiteFooter from './site-footer.jsx';
 import HomeProjects, {getSearchQuery} from '../pebble-projects/home-projects.jsx';
 
+import projectStyles from '../pebble-projects/projects.css';
 import styles from './home.css';
 
 const CREDITS_URL = 'credits.html';
@@ -133,11 +136,12 @@ const GitHubMark = () => (
 
 const NewsPost = ({post}) => {
     const link = post.link && safeURL(post.link.url);
-    const image = safeURL(post.image);
+    // An empty address would point at this page
+    const image = post.image && safeURL(post.image);
     const paragraphs = String(post.body || '').split(/\n\s*\n/)
         .filter(paragraph => paragraph.trim());
     return (
-        <article className={styles.newsPost}>
+        <li className={styles.newsPost}>
             {image && (
                 <img
                     alt=""
@@ -145,27 +149,29 @@ const NewsPost = ({post}) => {
                     src={image}
                 />
             )}
-            {post.date && (
-                <div className={styles.newsDate}>{formatDate(post.date)}</div>
-            )}
-            <h3 className={styles.newsTitle}>{post.title}</h3>
-            {paragraphs.map((paragraph, index) => (
-                <p
-                    className={styles.newsBody}
-                    key={index}
-                >
-                    {paragraph}
-                </p>
-            ))}
-            {link && (
-                <a
-                    className={styles.newsLink}
-                    href={link}
-                >
-                    {post.link.text || 'Learn more'}
-                </a>
-            )}
-        </article>
+            <div className={styles.newsText}>
+                <h3 className={styles.newsTitle}>{link ? <a href={link}>{post.title}</a> : post.title}</h3>
+                {post.date && (
+                    <div className={styles.newsDate}>{formatDate(post.date)}</div>
+                )}
+                {paragraphs.map((paragraph, index) => (
+                    <p
+                        className={styles.newsBody}
+                        key={index}
+                    >
+                        {paragraph}
+                    </p>
+                ))}
+                {link && (
+                    <a
+                        className={styles.newsLink}
+                        href={link}
+                    >
+                        {post.link.text || 'Learn more'}
+                    </a>
+                )}
+            </div>
+        </li>
     );
 };
 
@@ -180,6 +186,27 @@ NewsPost.propTypes = {
         }),
         title: PropTypes.string
     }).isRequired
+};
+
+/**
+ * A box like the ones on Scratch's front page: a title bar, then what's in it.
+ * @param {object} props Props.
+ * @returns {React.ReactElement} The box.
+ */
+const Box = ({title, note, children}) => (
+    <section className={projectStyles.box}>
+        <div className={projectStyles.boxHeader}>
+            <h2 className={projectStyles.boxTitle}>{title}</h2>
+            {note}
+        </div>
+        <div className={projectStyles.boxContent}>{children}</div>
+    </section>
+);
+
+Box.propTypes = {
+    children: PropTypes.node,
+    note: PropTypes.node,
+    title: PropTypes.node
 };
 
 const GitHubCard = ({github, error}) => {
@@ -233,15 +260,18 @@ const GitHubCard = ({github, error}) => {
         content = <p className={styles.cardText}>{'Loading…'}</p>;
     }
     return (
-        <section className={styles.card}>
-            <h2 className={styles.cardHeading}>
-                <GitHubMark />
-                {'Open source on GitHub'}
-            </h2>
+        <Box
+            title={(
+                <React.Fragment>
+                    <GitHubMark />
+                    {'Open source'}
+                </React.Fragment>
+            )}
+        >
             {content}
             <div className={styles.cardButtons}>
                 <a
-                    className={styles.secondaryButton}
+                    className={classNames(projectStyles.button, projectStyles.small, projectStyles.secondary)}
                     href={repoURL}
                     rel="noreferrer"
                     target="_blank"
@@ -249,7 +279,7 @@ const GitHubCard = ({github, error}) => {
                     {'View on GitHub'}
                 </a>
                 <a
-                    className={styles.secondaryButton}
+                    className={classNames(projectStyles.button, projectStyles.small, projectStyles.secondary)}
                     href={`${repoURL}/issues/new`}
                     rel="noreferrer"
                     target="_blank"
@@ -257,7 +287,7 @@ const GitHubCard = ({github, error}) => {
                     {'Report a problem'}
                 </a>
             </div>
-        </section>
+        </Box>
     );
 };
 
@@ -270,41 +300,21 @@ GitHubCard.propTypes = {
 };
 
 const AboutCard = () => (
-    <section className={styles.card}>
-        <h2 className={styles.cardHeading}>{`About ${APP_NAME}`}</h2>
+    <Box title={`About ${APP_NAME}`}>
         <p className={styles.cardText}>
             {`${APP_NAME} is free to use and open source. It's built on TurboWarp and Scratch, ` +
                 'with extra blocks and extensions from PenguinMod and Snail IDE.'}
         </p>
         <div className={styles.cardButtons}>
             <a
-                className={styles.secondaryButton}
+                className={classNames(projectStyles.button, projectStyles.small, projectStyles.secondary)}
                 href={CREDITS_URL}
             >
                 {'Credits'}
             </a>
         </div>
-    </section>
+    </Box>
 );
-
-const FEATURES = [
-    {
-        title: 'Lots of blocks',
-        text: 'Everything from Scratch, plus extra blocks from TurboWarp and PenguinMod in every category.'
-    },
-    {
-        title: 'Hundreds of extensions',
-        text: 'Add extensions from the TurboWarp, PenguinMod and Snail IDE galleries, or load your own.'
-    },
-    {
-        title: 'Share anywhere',
-        text: 'Turn a project into a website, an installable web app, or an app for Windows, macOS and Linux.'
-    },
-    {
-        title: 'Your files, your way',
-        text: 'Projects save to your computer as .pbp files, and can also be saved for Scratch and PenguinMod.'
-    }
-];
 
 class Home extends React.Component {
     constructor (props) {
@@ -334,25 +344,26 @@ class Home extends React.Component {
             return <p className={styles.newsMessage}>{'Loading news…'}</p>;
         }
         if (this.state.news.length === 0) {
-            return (
-                <div className={styles.newsPost}>
-                    <p className={styles.newsMessage}>{'No news yet. Check back soon!'}</p>
-                </div>
-            );
+            return <p className={styles.newsMessage}>{'No news yet. Check back soon!'}</p>;
         }
-        return this.state.news.map((post, index) => (
-            <NewsPost
-                key={`${post.date}-${index}`}
-                post={post}
-            />
-        ));
+        return (
+            <ul className={styles.newsList}>
+                {this.state.news.map((post, index) => (
+                    <NewsPost
+                        key={`${post.date}-${index}`}
+                        post={post}
+                    />
+                ))}
+            </ul>
+        );
     }
     render () {
+        const searching = !!getSearchQuery();
         return (
             <div className={styles.page}>
                 <SiteBar />
 
-                {!getSearchQuery() && <section className={styles.hero}>
+                {!searching && <section className={styles.hero}>
                     <div
                         aria-hidden="true"
                         className={styles.heroRings}
@@ -366,13 +377,13 @@ class Home extends React.Component {
                     <p className={styles.heroTagline}>{'Make games, animations and apps with blocks.'}</p>
                     <div className={styles.heroButtons}>
                         <a
-                            className={styles.primaryButton}
+                            className={classNames(projectStyles.button, projectStyles.big)}
                             href={EDITOR_URL}
                         >
                             {'Start creating'}
                         </a>
                         <a
-                            className={styles.secondaryButton}
+                            className={classNames(projectStyles.button, projectStyles.big, projectStyles.secondary)}
                             href={PACKAGER_URL}
                         >
                             {'Package a project'}
@@ -380,70 +391,40 @@ class Home extends React.Component {
                     </div>
                 </section>}
 
-                <HomeProjects />
+                <main className={styles.splash}>
+                    <HomeProjects />
 
-                <main className={styles.content}>
-                    <section className={styles.news}>
-                        <h2 className={styles.sectionHeading}>{'News'}</h2>
-                        {this.renderNews()}
-                    </section>
-                    <aside className={styles.side}>
-                        {hasGitHub() ? (
-                            <GitHubCard
-                                error={this.state.githubError}
-                                github={this.state.github}
-                            />
-                        ) : (
-                            <AboutCard />
-                        )}
-                        <section className={styles.card}>
-                            <h2 className={styles.cardHeading}>{'Get started'}</h2>
-                            <ul className={styles.quickLinks}>
-                                <li>
-                                    <a href={EDITOR_URL}>{'Make a new project'}</a>
-                                </li>
-                                <li>
-                                    <a href={PACKAGER_URL}>{'Turn a project into an app'}</a>
-                                </li>
-                                <li>
-                                    <a href={CREDITS_URL}>{'See who made this possible'}</a>
-                                </li>
-                            </ul>
-                        </section>
-                    </aside>
+                    {!searching && <div className={styles.splashRow}>
+                        <Box title={`${APP_NAME} News`}>
+                            {this.renderNews()}
+                        </Box>
+                        <div className={styles.side}>
+                            {hasGitHub() ? (
+                                <GitHubCard
+                                    error={this.state.githubError}
+                                    github={this.state.github}
+                                />
+                            ) : (
+                                <AboutCard />
+                            )}
+                            <Box title="Get started">
+                                <ul className={styles.quickLinks}>
+                                    <li>
+                                        <a href={EDITOR_URL}>{'Make a new project'}</a>
+                                    </li>
+                                    <li>
+                                        <a href={PACKAGER_URL}>{'Turn a project into an app'}</a>
+                                    </li>
+                                    <li>
+                                        <a href={CREDITS_URL}>{'See who made this possible'}</a>
+                                    </li>
+                                </ul>
+                            </Box>
+                        </div>
+                    </div>}
                 </main>
 
-                <section className={styles.features}>
-                    {FEATURES.map(feature => (
-                        <div
-                            className={styles.feature}
-                            key={feature.title}
-                        >
-                            <h3 className={styles.featureTitle}>{feature.title}</h3>
-                            <p className={styles.featureText}>{feature.text}</p>
-                        </div>
-                    ))}
-                </section>
-
-                <footer className={styles.footer}>
-                    <p>
-                        {`${APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation.`}
-                    </p>
-                    <p>
-                        {'Scratch is a project of the Scratch Foundation. It is available for free at '}
-                        <a
-                            href="https://scratch.org/"
-                            rel="noreferrer"
-                            target="_blank"
-                        >
-                            {'https://scratch.org/'}
-                        </a>
-                        {'.'}
-                    </p>
-                    <p>
-                        <a href={CREDITS_URL}>{'Credits'}</a>
-                    </p>
-                </footer>
+                <SiteFooter />
             </div>
         );
     }

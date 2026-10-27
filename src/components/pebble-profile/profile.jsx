@@ -20,12 +20,18 @@ import {
     updateProfile
 } from '../../lib/pebble-accounts';
 import SiteBar from '../pebble-home/site-bar.jsx';
+import SiteFooter from '../pebble-home/site-footer.jsx';
 import AccountModal from '../pebble-account/account-modal.jsx';
 import pebbleLogo from '../menu-bar/pebble-logo.svg';
 import ProjectRow from '../pebble-projects/project-row.jsx';
+import ReportModal from '../pebble-reports/report-modal.jsx';
+import ReportsList from '../pebble-reports/reports-list.jsx';
+import {isStaff} from '../../lib/pebble-reports';
 
 import homeStyles from '../pebble-home/home.css';
+import projectStyles from '../pebble-projects/projects.css';
 import styles from './profile.css';
+import reportStyles from '../pebble-reports/reports.css';
 
 const MAX_BIO_LENGTH = 500;
 const PICTURE_SIZE = 256;
@@ -61,8 +67,6 @@ const makeProfilePicture = file => new Promise((resolve, reject) => {
 });
 
 // [] uses the browser's own language
-const formatCount = (count, one, many) => `${count.toLocaleString()} ${count === 1 ? one : many}`;
-
 const formatJoined = time => new Date(time).toLocaleDateString([], {
     year: 'numeric',
     month: 'long',
@@ -87,6 +91,25 @@ Avatar.propTypes = {
 };
 
 /**
+ * A box with a title bar, like Scratch's.
+ * @param {object} props Props.
+ * @returns {React.ReactElement} The box.
+ */
+const Box = ({title, children}) => (
+    <section className={projectStyles.box}>
+        <div className={projectStyles.boxHeader}>
+            <h2 className={projectStyles.boxTitle}>{title}</h2>
+        </div>
+        <div className={projectStyles.boxContent}>{children}</div>
+    </section>
+);
+
+Box.propTypes = {
+    children: PropTypes.node,
+    title: PropTypes.string
+};
+
+/**
  * A user's profile page: their picture, name, role and bio. On your own profile you can change them.
  */
 class Profile extends React.Component {
@@ -94,9 +117,11 @@ class Profile extends React.Component {
         super(props);
         bindAll(this, [
             'handleBioChange',
+            'handleCloseReport',
             'handleCloseSignIn',
             'handleFollow',
             'handleOpenSignIn',
+            'handleReport',
             'handlePictureChosen',
             'handleRemovePicture',
             'handleSaveBio',
@@ -114,7 +139,8 @@ class Profile extends React.Component {
             busy: null,
             message: null,
             messageIsError: false,
-            signingIn: false
+            signingIn: false,
+            reporting: false
         };
     }
     componentDidMount () {
@@ -219,6 +245,14 @@ class Profile extends React.Component {
     handleCloseSignIn () {
         this.setState({signingIn: false});
     }
+    handleReport () {
+        // Reporting needs an account
+        if (this.state.user) this.setState({reporting: true});
+        else this.setState({signingIn: true});
+    }
+    handleCloseReport () {
+        this.setState({reporting: false});
+    }
     renderMessage () {
         const {message, messageIsError} = this.state;
         if (!message) return null;
@@ -236,14 +270,14 @@ class Profile extends React.Component {
         if (!this.isOwnProfile()) {
             return profile.bio ?
                 <p className={styles.bio}>{profile.bio}</p> :
-                <p className={styles.empty}>{`${profile.username} hasn't written a bio yet.`}</p>;
+                <p className={projectStyles.note}>{`${profile.username} hasn't written anything here yet.`}</p>;
         }
         const verified = user.emailVerified;
         const bio = this.state.bio === null ? profile.bio : this.state.bio;
         return (
             <div className={styles.bioEditor}>
                 <textarea
-                    aria-label="Your bio"
+                    aria-label="About me"
                     className={styles.bioInput}
                     disabled={!verified}
                     maxLength={MAX_BIO_LENGTH}
@@ -254,12 +288,12 @@ class Profile extends React.Component {
                 <div className={styles.bioFooter}>
                     <span className={styles.count}>{`${bio.length}/${MAX_BIO_LENGTH}`}</span>
                     <button
-                        className={styles.button}
+                        className={classNames(projectStyles.button, projectStyles.small)}
                         disabled={!verified || busy === 'bio' || bio === profile.bio}
                         type="button"
                         onClick={this.handleSaveBio}
                     >
-                        {busy === 'bio' ? 'Saving…' : 'Save bio'}
+                        {busy === 'bio' ? 'Saving…' : 'Save'}
                     </button>
                 </div>
             </div>
@@ -269,8 +303,7 @@ class Profile extends React.Component {
         const {user, profile, busy} = this.state;
         const verified = user.emailVerified;
         return (
-            <section className={styles.box}>
-                <h2 className={styles.boxHeading}>{'Your account'}</h2>
+            <Box title="Your account">
                 {verified ? (
                     <p className={styles.text}>
                         {'Email: '}
@@ -285,7 +318,7 @@ class Profile extends React.Component {
                             {'.'}
                         </p>
                         <button
-                            className={styles.button}
+                            className={classNames(projectStyles.button, projectStyles.small)}
                             disabled={busy === 'verify'}
                             type="button"
                             onClick={this.handleSendVerification}
@@ -296,7 +329,9 @@ class Profile extends React.Component {
                 )}
                 <div className={styles.buttons}>
                     <label
-                        className={classNames(styles.button, {[styles.disabled]: !verified || busy === 'picture'})}
+                        className={classNames(projectStyles.button, projectStyles.small, {
+                            [projectStyles.disabled]: !verified || busy === 'picture'
+                        })}
                     >
                         <input
                             accept="image/*"
@@ -309,7 +344,7 @@ class Profile extends React.Component {
                     </label>
                     {profile.avatarVersion && (
                         <button
-                            className={classNames(styles.button, styles.secondary)}
+                            className={classNames(projectStyles.button, projectStyles.small, projectStyles.secondary)}
                             disabled={busy === 'picture'}
                             type="button"
                             onClick={this.handleRemovePicture}
@@ -318,7 +353,7 @@ class Profile extends React.Component {
                         </button>
                     )}
                     <button
-                        className={classNames(styles.button, styles.secondary)}
+                        className={classNames(projectStyles.button, projectStyles.small, projectStyles.secondary)}
                         disabled={busy === 'sign-out'}
                         type="button"
                         onClick={this.handleSignOut}
@@ -327,7 +362,7 @@ class Profile extends React.Component {
                     </button>
                 </div>
                 {this.renderMessage()}
-            </section>
+            </Box>
         );
     }
     renderContent () {
@@ -335,16 +370,18 @@ class Profile extends React.Component {
         if (!username) {
             if (typeof user === 'undefined') return <p className={styles.empty}>{'Loading…'}</p>;
             return (
-                <section className={classNames(styles.box, styles.center)}>
+                <Box title="Profile">
                     <p className={styles.text}>{'Sign in to see your profile.'}</p>
-                    <button
-                        className={styles.button}
-                        type="button"
-                        onClick={this.handleOpenSignIn}
-                    >
-                        {'Sign in'}
-                    </button>
-                </section>
+                    <div>
+                        <button
+                            className={projectStyles.button}
+                            type="button"
+                            onClick={this.handleOpenSignIn}
+                        >
+                            {'Sign in'}
+                        </button>
+                    </div>
+                </Box>
             );
         }
         if (notFound) {
@@ -355,59 +392,75 @@ class Profile extends React.Component {
         const own = this.isOwnProfile();
         return (
             <React.Fragment>
-                <header className={styles.header}>
+                <section className={classNames(projectStyles.box, styles.header)}>
                     <Avatar
                         username={profile.username}
                         version={profile.avatarVersion}
                     />
-                    <h1 className={styles.username}>{profile.username}</h1>
-                    <div className={styles.followArea}>
-                        <span className={styles.followers}>
-                            {formatCount(profile.followers, 'follower', 'followers')}
-                        </span>
-                        {!own && (
+                    <div className={styles.headerText}>
+                        <h1 className={styles.username}>{profile.username}</h1>
+                        <div className={styles.meta}>
+                            <span className={classNames(styles.role, styles[`role-${profile.role}`])}>
+                                {ROLE_NAMES[profile.role] || profile.role}
+                            </span>
+                            <span>{`Joined ${formatJoined(profile.joined)}`}</span>
+                        </div>
+                        <div className={styles.meta}>
+                            <span>
+                                <strong>{profile.followers.toLocaleString()}</strong>
+                                {profile.followers === 1 ? ' follower' : ' followers'}
+                            </span>
+                            <span>
+                                <strong>{profile.following.toLocaleString()}</strong>
+                                {' following'}
+                            </span>
+                        </div>
+                    </div>
+                    {!own && (
+                        <div className={styles.headerActions}>
                             <button
-                                className={classNames(styles.followButton, {[styles.unfollow]: profile.youFollow})}
+                                className={classNames(projectStyles.button, {
+                                    [projectStyles.secondary]: profile.youFollow
+                                })}
                                 disabled={this.state.busy === 'follow'}
                                 type="button"
                                 onClick={this.handleFollow}
                             >
                                 {profile.youFollow ? 'Unfollow' : 'Follow'}
                             </button>
-                        )}
-                    </div>
-                </header>
+                            <button
+                                className={reportStyles.reportButton}
+                                type="button"
+                                onClick={this.handleReport}
+                            >
+                                {'⚑ Report this user'}
+                            </button>
+                        </div>
+                    )}
+                </section>
                 {!own && this.renderMessage()}
-                <div className={styles.row}>
-                    <section className={classNames(styles.box, styles.about)}>
-                        <h2 className={styles.boxHeading}>{'About Me'}</h2>
+                <div className={classNames(styles.row, {[styles.rowSingle]: !own})}>
+                    <Box title="About me">
                         {this.renderBio()}
-                    </section>
-                    <section className={classNames(styles.box, styles.side)}>
-                        <h2 className={styles.sideHeading}>{'Role'}</h2>
-                        <p className={classNames(styles.role, styles[`role-${profile.role}`])}>
-                            {ROLE_NAMES[profile.role] || profile.role}
-                        </p>
-                        <h2 className={styles.sideHeading}>{'Following'}</h2>
-                        <p className={styles.sideValue}>{profile.following.toLocaleString()}</p>
-                        <h2 className={styles.sideHeading}>{'Joined'}</h2>
-                        <p className={styles.sideValue}>{formatJoined(profile.joined)}</p>
-                    </section>
+                    </Box>
+                    {own && this.renderOwnSettings()}
                 </div>
-                {own && this.renderOwnSettings()}
+                {own && isStaff(this.state.user) && <ReportsList />}
                 <ProjectRow
+                    showCount
                     emptyText={own ?
                         'You haven\'t shared any projects yet. Click Upload in the editor to share one.' :
                         'No shared projects yet.'}
                     list="user"
-                    title={own ? 'Your projects' : `${profile.username}'s projects`}
+                    title="Shared Projects"
                     user={profile.username}
                 />
                 {own && (
                     <ProjectRow
+                        showCount
                         emptyText="Nothing saved yet. Click Save on a project to keep it here."
                         list="saved"
-                        title="Saved projects"
+                        title="Saved Projects"
                     />
                 )}
             </React.Fragment>
@@ -420,10 +473,19 @@ class Profile extends React.Component {
                 <main className={styles.main}>
                     {this.renderContent()}
                 </main>
+                <SiteFooter />
                 {this.state.signingIn && (
                     <AccountModal
                         mode="sign-in"
                         onClose={this.handleCloseSignIn}
+                    />
+                )}
+                {this.state.reporting && this.state.profile && (
+                    <ReportModal
+                        kind="user"
+                        name={this.state.profile.username}
+                        target={this.state.profile.username}
+                        onClose={this.handleCloseReport}
                     />
                 )}
             </div>

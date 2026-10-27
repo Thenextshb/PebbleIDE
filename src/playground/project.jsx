@@ -1,7 +1,3 @@
-import './import-first';
-
-import React from 'react';
-import render from './app-target';
-import ProjectPage from '../components/pebble-projects/project-page.jsx';
-
-render(<ProjectPage />);
+// Project pages used to be project.html?id=<number>; they're now at the home page's address, like /#<number>
+const id = new URLSearchParams(location.search).get('id');
+location.replace(`./${/^\d+$/.test(id || '') ? `#${id}` : ''}`);

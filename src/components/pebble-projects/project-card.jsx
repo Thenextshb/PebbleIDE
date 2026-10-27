@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {getAvatarURL} from '../../lib/pebble-accounts';
+import {getAvatarURL, getProfileURL} from '../../lib/pebble-accounts';
 import {getProjectPageURL, getThumbnailURL} from '../../lib/pebble-projects';
 import pebbleLogo from '../menu-bar/pebble-logo.svg';
 import styles from './projects.css';
@@ -14,56 +14,74 @@ const formatCount = (count, one, many) => `${count.toLocaleString()} ${count ===
  * @param {object} props Props.
  * @returns {React.ReactElement} The picture.
  */
-const SmallAvatar = ({username, version}) => {
+const SmallAvatar = ({big, username, version}) => {
     const url = getAvatarURL(username, version);
     return (
         <img
             alt=""
-            className={classNames(styles.smallAvatar, {[styles.smallAvatarDefault]: !url})}
+            className={classNames(styles.smallAvatar, {
+                [styles.smallAvatarDefault]: !url,
+                [styles.bigAvatar]: big
+            })}
             src={url || pebbleLogo}
         />
     );
 };
 
 SmallAvatar.propTypes = {
+    big: PropTypes.bool,
     username: PropTypes.string.isRequired,
     version: PropTypes.number
 };
 
 /**
- * A project's thumbnail, name and who made it, linking to its page.
+ * A project's thumbnail with who made it and its name under it, like Scratch's.
  * @param {object} props Props.
- * @returns {React.ReactElement} The card.
+ * @returns {React.ReactElement} The thumbnail.
  */
 const ProjectCard = ({project}) => {
     const thumbnail = getThumbnailURL(project.id, project.thumbnailVersion);
+    const pageURL = getProjectPageURL(project.id);
+    const profileURL = getProfileURL(project.author.username);
     return (
-        <a
-            className={classNames(styles.card, {[styles.cardFeatured]: project.featured})}
-            href={getProjectPageURL(project.id)}
-            title={project.title}
-        >
-            <img
-                alt=""
-                className={classNames(styles.thumbnail, {[styles.noThumbnail]: !thumbnail})}
-                loading="lazy"
-                src={thumbnail || pebbleLogo}
-            />
-            <div className={styles.cardInfo}>
-                <SmallAvatar
-                    username={project.author.username}
-                    version={project.author.avatarVersion}
+        <div className={styles.thumb}>
+            <a
+                className={styles.thumbLink}
+                href={pageURL}
+                tabIndex={-1}
+            >
+                <img
+                    alt=""
+                    className={classNames(styles.thumbnail, {[styles.noThumbnail]: !thumbnail})}
+                    loading="lazy"
+                    src={thumbnail || pebbleLogo}
                 />
-                <div className={styles.cardText}>
-                    <span className={classNames(styles.cardTitle, {[styles.gold]: project.featured})}>
+            </a>
+            <div className={styles.thumbInfo}>
+                <a
+                    href={profileURL}
+                    tabIndex={-1}
+                >
+                    <SmallAvatar
+                        username={project.author.username}
+                        version={project.author.avatarVersion}
+                    />
+                </a>
+                <div className={styles.thumbText}>
+                    <a
+                        className={classNames(styles.thumbTitle, {[styles.gold]: project.featured})}
+                        href={pageURL}
+                        title={project.title}
+                    >
                         {project.title}
-                    </span>
-                    <span className={styles.cardMeta}>
-                        {`${project.author.username} · ${formatCount(project.upvotes, 'upvote', 'upvotes')}`}
+                    </a>
+                    <span className={styles.thumbMeta}>
+                        <a href={profileURL}>{project.author.username}</a>
+                        {` · ▲ ${project.upvotes.toLocaleString()}`}
                     </span>
                 </div>
             </div>
-        </a>
+        </div>
     );
 };
 

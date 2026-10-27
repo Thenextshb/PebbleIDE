@@ -59,51 +59,45 @@ a {
 .menu {
     margin-bottom: 8px;
 }
-.share-row {
-    display: flex;
+/* "See Project Page": laid out like the project page on the site (pebble-projects/projects.css), using the
+   editor's theme colors */
+.preview {
+    --home-surface: $ui-modal-background;
+    --home-surface-raised: $ui-tertiary;
+    --home-box: $ui-black-transparent;
+    --home-page: $ui-primary;
+    --home-text: $text-primary;
+    --home-muted: $text-primary-transparent;
+    --home-primary: $looks-secondary;
+    --home-primary-text: $accent-foreground;
+    --home-border: $ui-black-transparent;
+    --home-link: $looks-secondary;
+
+    /* The header, stats and description say where they go (.project-header and so on);
+       the stage fills the space left */
+    display: grid;
+    grid-template-areas:
+        "header header"
+        "stage side"
+        "stats side";
+    grid-template-columns: var(--stage-width) minmax(16rem, 22rem);
+    grid-template-rows: auto auto 1fr;
+    gap: 0.75rem 1.25rem;
     justify-content: center;
-    margin: 12px 0;
+    align-items: start;
+    padding: 0 1rem 2rem;
+    color: $text-primary;
 }
 
-.share-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    background-color: $looks-secondary;
-    color: $accent-foreground;
-    font: inherit;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 0 0 1px $ui-black-transparent;
+@media (max-width: 52rem) {
+    .preview {
+        grid-template-areas:
+            "header"
+            "stage"
+            "stats"
+            "side";
+        grid-template-columns: var(--stage-width);
+        grid-template-rows: none;
+    }
 }
 
-.share-button:hover {
-    filter: brightness(0.95);
-}
-
-.share-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-.footer {
-    padding: 10px 0;
-    margin-top: 10px;
-    border-top: 2px solid $ui-black-transparent;
-}
-.footer a {
-    font-weight: bold;
-    text-decoration: none;
-}
-.footer-content {
-    max-width: 600px;
-    margin: auto;
-}
-.footer-text {
-    text-align: center;
-    margin: 5px 0 10px 0;
-}

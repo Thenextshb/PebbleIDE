@@ -178,6 +178,14 @@ const readUpload = async (request, {needsFile}) => {
     return upload;
 };
 
+// Projects get a random 10-digit number like 1773248604, so the numbers don't show how many projects there are
+const makeProjectId = () => {
+    const [high, low] = crypto.getRandomValues(new Uint32Array(2));
+    // 53 random bits, as a number from 0 up to 1
+    const fraction = (((high >>> 5) * 67108864) + (low >>> 6)) / 9007199254740992;
+    return 1000000000 + Math.floor(fraction * 9000000000);
+};
+
 const shareProject = async ({request, env}) => {
     const user = await requireVerifiedUser(request, env);
     const last = await env.DB.prepare('SELECT MAX(created_at) AS created_at FROM projects WHERE owner_id = ?')
@@ -188,13 +196,21 @@ const shareProject = async ({request, env}) => {
     }
     const upload = await readUpload(request, {needsFile: true});
     const now = Date.now();
-    const {id} = await env.DB.prepare(
-        `INSERT INTO projects (owner_id, title, description, created_at, changed_at, file_version, file_size,
-            thumbnail_version)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-    ).bind(user.id, upload.title, upload.description, now, now, now, upload.project.length,
-        upload.thumbnail ? now : null)
-        .first();
+    let id = null;
+    // Picking a number that's already taken is very unlikely, but try again if it happens
+    for (let attempt = 0; id === null; attempt++) {
+        try {
+            ({id} = await env.DB.prepare(
+                `INSERT INTO projects (id, owner_id, title, description, created_at, changed_at, file_version,
+                    file_size, thumbnail_version)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+            ).bind(makeProjectId(), user.id, upload.title, upload.description, now, now, now,
+                upload.project.length, upload.thumbnail ? now : null)
+                .first());
+        } catch (e) {
+            if (attempt >= 4 || !String(e.message).includes('UNIQUE')) throw e;
+        }
+    }
     const store = getStore(env);
     try {
         await store.put(fileKey(id), upload.project, 'application/octet-stream');

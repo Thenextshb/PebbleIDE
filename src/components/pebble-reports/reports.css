@@ -1,0 +1,114 @@
+/* The report pop-up (its look comes from pebble-account/account.css) */
+.reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.reason {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.details {
+    height: 4.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    resize: vertical;
+}
+
+/* The team's list of reports, on the profile page. Its box comes from pebble-projects/projects.css;
+   colors from pebble-home/home.css */
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.tab {
+    height: 2rem;
+    padding: 0 0.875rem;
+    border: none;
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--home-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.tab:hover {
+    color: var(--home-text);
+}
+
+.tab-selected,
+.tab-selected:hover {
+    background: var(--home-primary);
+    color: var(--home-primary-text);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.report {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--home-border);
+    border-left: 4px solid #e5484d;
+    border-radius: 0.5rem;
+    background: var(--home-page);
+    font-size: 0.875rem;
+}
+
+.report-what {
+    font-weight: bold;
+}
+
+.report-reason {
+    color: #e5484d;
+    font-size: 0.8125rem;
+    font-weight: bold;
+}
+
+.report-details {
+    margin: 0;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.report-meta {
+    color: var(--home-muted);
+    font-size: 0.75rem;
+}
+
+.report > button {
+    margin-top: 0.375rem;
+}
+
+/* The small "Report" buttons on project pages and profiles */
+.report-button {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--home-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.report-button:hover {
+    color: #e5484d;
+    text-decoration: underline;
+}

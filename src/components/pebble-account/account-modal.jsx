@@ -346,60 +346,62 @@ class AccountModal extends React.Component {
                             {'×'}
                         </button>
                     </div>
-                    {notice ? (
-                        <React.Fragment>
-                            <p
-                                className={styles.notice}
-                                role="status"
-                            >
-                                {notice}
-                            </p>
-                            <button
-                                className={styles.submit}
-                                type="button"
-                                onClick={this.handleClose}
-                            >
-                                {'OK'}
-                            </button>
-                        </React.Fragment>
-                    ) : (
-                        <React.Fragment>
-                            {this.renderFields()}
-                            {NEEDS_ROBOT_CHECK.includes(mode) && (
-                                <div
-                                    className={styles.robotCheck}
-                                    ref={this.setRobotCheck}
-                                />
-                            )}
-                            {error && (
+                    <div className={styles.body}>
+                        {notice ? (
+                            <React.Fragment>
                                 <p
-                                    className={styles.error}
-                                    role="alert"
+                                    className={styles.notice}
+                                    role="status"
                                 >
-                                    {error}
+                                    {notice}
                                 </p>
-                            )}
-                            {mode === 'verify' ? (
                                 <button
                                     className={styles.submit}
-                                    disabled={busy}
                                     type="button"
                                     onClick={this.handleClose}
                                 >
                                     {'OK'}
                                 </button>
-                            ) : (
-                                <button
-                                    className={styles.submit}
-                                    disabled={busy}
-                                    type="submit"
-                                >
-                                    {busy ? 'Please wait…' : BUTTONS[mode]}
-                                </button>
-                            )}
-                            {this.renderLinks()}
-                        </React.Fragment>
-                    )}
+                            </React.Fragment>
+                        ) : (
+                            <React.Fragment>
+                                {this.renderFields()}
+                                {NEEDS_ROBOT_CHECK.includes(mode) && (
+                                    <div
+                                        className={styles.robotCheck}
+                                        ref={this.setRobotCheck}
+                                    />
+                                )}
+                                {error && (
+                                    <p
+                                        className={styles.error}
+                                        role="alert"
+                                    >
+                                        {error}
+                                    </p>
+                                )}
+                                {mode === 'verify' ? (
+                                    <button
+                                        className={styles.submit}
+                                        disabled={busy}
+                                        type="button"
+                                        onClick={this.handleClose}
+                                    >
+                                        {'OK'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        className={styles.submit}
+                                        disabled={busy}
+                                        type="submit"
+                                    >
+                                        {busy ? 'Please wait…' : BUTTONS[mode]}
+                                    </button>
+                                )}
+                                {this.renderLinks()}
+                            </React.Fragment>
+                        )}
+                    </div>
                 </form>
             </div>
         ), document.body);

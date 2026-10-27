@@ -19,9 +19,9 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
-import {FormattedMessage, defineMessages, injectIntl, intlShape} from 'react-intl';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import {getIsLoading} from '../reducers/project-state.js';
-import {openSaveFormatModal} from '../reducers/modals.js';
+import {setPlayer} from '../reducers/mode.js';
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import ErrorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
 import TWStateManagerHOC from '../lib/tw-state-manager-hoc.jsx';
@@ -39,6 +39,9 @@ import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
 import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
 import {APP_NAME} from '../lib/brand.js';
+import {getUser, loadUser, onUserChange} from '../lib/pebble-accounts';
+import {PROJECTS_ENABLED, openProject} from '../lib/pebble-projects';
+import {PreviewHeader, PreviewSide, PreviewStats} from '../components/pebble-projects/project-page-preview.jsx';
 
 import styles from './interface.css';
 
@@ -55,23 +58,6 @@ const handleClickAddonSettings = addonId => {
 const handleClickLogo = () => {
     location.href = new URL(process.env.ROOT || './', location.href).href;
 };
-
-const ShareIcon = () => (
-    <svg
-        aria-hidden="true"
-        className={styles.shareIcon}
-        viewBox="0 0 20 20"
-    >
-        <path
-            d="M10 2.5v10M6 6.5l4-4 4 4M4 10.5v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-        />
-    </svg>
-);
 
 const messages = defineMessages({
     defaultTitle: {
@@ -100,63 +86,37 @@ if (AddonChannels.changeChannel) {
 
 runAddons();
 
-const Footer = () => (
-    <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-            <div className={styles.footerText}>
-                <FormattedMessage
-                    // eslint-disable-next-line max-len
-                    defaultMessage="{APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation."
-                    description="Disclaimer that TurboWarp is not connected to Scratch"
-                    id="tw.footer.disclaimer"
-                    values={{
-                        APP_NAME
-                    }}
-                />
-            </div>
-
-            <div className={styles.footerText}>
-                <FormattedMessage
-                    // eslint-disable-next-line max-len
-                    defaultMessage="Scratch is a project of the Scratch Foundation. It is available for free at {scratchDotOrg}."
-                    description="A disclaimer that Scratch requires when referring to Scratch. {scratchDotOrg} is a link with text 'https://scratch.org/'"
-                    id="tw.footer.scratchDisclaimer"
-                    values={{
-                        scratchDotOrg: (
-                            <a
-                                href="https://scratch.org/"
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {'https://scratch.org/'}
-                            </a>
-                        )
-                    }}
-                />
-            </div>
-
-            <div className={styles.footerText}>
-                <a href="credits.html">
-                    <FormattedMessage
-                        defaultMessage="Credits"
-                        description="Credits link in footer"
-                        id="tw.footer.credits"
-                    />
-                </a>
-            </div>
-        </div>
-    </footer>
-);
-
 class Interface extends React.Component {
     constructor (props) {
         super(props);
         this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
+        this.handleUserChange = this.handleUserChange.bind(this);
+        this.handleOpenProjectChange = this.handleOpenProjectChange.bind(this);
+        this.state = {
+            user: getUser(),
+            sharedProject: openProject.get()
+        };
+    }
+    componentDidMount () {
+        // For the project page view: who made it, and its upvotes and views if it's shared
+        this.stopListeningToUser = onUserChange(this.handleUserChange);
+        this.stopListeningToProject = openProject.listen(this.handleOpenProjectChange);
+        loadUser();
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
             loadServiceWorker();
         }
+    }
+    componentWillUnmount () {
+        this.stopListeningToUser();
+        this.stopListeningToProject();
+    }
+    handleUserChange (user) {
+        this.setState({user});
+    }
+    handleOpenProjectChange (sharedProject) {
+        this.setState({sharedProject});
     }
     handleUpdateProjectTitle (title, isDefault) {
         if (isDefault || !title) {
@@ -177,12 +137,23 @@ class Interface extends React.Component {
             isLoading,
             isPlayerOnly,
             isRtl,
-            onShare,
+            onSeeInside,
+            projectTitle,
             /* eslint-enable no-unused-vars */
             ...props
         } = this.props;
         const isHomepage = isPlayerOnly && !isFullScreen;
         const isEditor = !isPlayerOnly;
+        // "See Project Page" looks like the project's page on the site
+        const isPreview = isHomepage && PROJECTS_ENABLED;
+        const {user, sharedProject} = this.state;
+        let centerStyle = null;
+        if (isPreview) {
+            // + 2 accounts for 1px border on each side of the stage
+            centerStyle = {'--stage-width': `${Math.max(480, props.customStageSize.width) + 2}px`};
+        } else if (isPlayerOnly) {
+            centerStyle = {width: `${Math.max(480, props.customStageSize.width) + 2}px`};
+        }
         return (
             <div
                 className={classNames(styles.container, {
@@ -205,13 +176,19 @@ class Interface extends React.Component {
                     </div>
                 ) : null}
                 <div
-                    className={styles.center}
-                    style={isPlayerOnly ? ({
-                        // + 2 accounts for 1px border on each side of the stage
-                        width: `${Math.max(480, props.customStageSize.width) + 2}px`
-                    }) : null}
+                    className={classNames(styles.center, {[styles.preview]: isPreview})}
+                    style={centerStyle}
                 >
+                    {isPreview && (
+                        <PreviewHeader
+                            project={sharedProject}
+                            title={projectTitle}
+                            user={user}
+                            onSeeInside={onSeeInside}
+                        />
+                    )}
                     <GUI
+                        key="gui"
                         onClickAddonSettings={handleClickAddonSettings}
                         onClickLogo={handleClickLogo}
                         onUpdateProjectTitle={this.handleUpdateProjectTitle}
@@ -219,28 +196,12 @@ class Interface extends React.Component {
                         backpackHost="_local_"
                         {...props}
                     />
-                    {isHomepage ? (
-                        <React.Fragment>
-                            {isBrowserSupported() ? null : (
-                                <BrowserModal isRtl={isRtl} />
-                            )}
-                            <div className={styles.shareRow}>
-                                <button
-                                    className={styles.shareButton}
-                                    onClick={onShare}
-                                >
-                                    <ShareIcon />
-                                    <FormattedMessage
-                                        defaultMessage="Share"
-                                        description="Button on the project page that opens the save to computer popup"
-                                        id="pebble.projectPage.share"
-                                    />
-                                </button>
-                            </div>
-                        </React.Fragment>
-                    ) : null}
+                    {isPreview && (
+                        <PreviewStats project={sharedProject} />
+                    )}
+                    {isPreview && <PreviewSide project={sharedProject} />}
+                    {isHomepage && !isBrowserSupported() && <BrowserModal isRtl={isRtl} />}
                 </div>
-                {isHomepage && <Footer />}
             </div>
         );
     }
@@ -256,7 +217,8 @@ Interface.propTypes = {
     isLoading: PropTypes.bool,
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
-    onShare: PropTypes.func
+    onSeeInside: PropTypes.func,
+    projectTitle: PropTypes.string
 };
 
 const mapStateToProps = state => ({
@@ -264,11 +226,12 @@ const mapStateToProps = state => ({
     isFullScreen: state.scratchGui.mode.isFullScreen,
     isLoading: getIsLoading(state.scratchGui.projectState.loadingState),
     isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
-    isRtl: state.locales.isRtl
+    isRtl: state.locales.isRtl,
+    projectTitle: state.scratchGui.projectTitle
 });
 
 const mapDispatchToProps = dispatch => ({
-    onShare: () => dispatch(openSaveFormatModal())
+    onSeeInside: () => dispatch(setPlayer(false))
 });
 
 const ConnectedInterface = injectIntl(connect(

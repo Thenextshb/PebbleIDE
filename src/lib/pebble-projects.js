@@ -11,7 +11,7 @@ const PROJECTS_ENABLED = ACCOUNTS_ENABLED;
 
 const getAPIURL = path => getSiteURL(`api/projects${path}`);
 
-const getProjectPageURL = id => getSiteURL(`project.html?id=${id}`);
+const getProjectPageURL = id => getSiteURL(`#${id}`);
 const getEditorURL = id => getSiteURL(`editor.html#${id}`);
 // The player only runs the addons listed here: the pause button
 const getEmbedURL = id => getSiteURL(`embed.html?addons=pause#${id}`);

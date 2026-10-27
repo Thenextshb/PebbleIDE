@@ -21,6 +21,7 @@ import {generateRandomUsername} from './tw-username';
 import {setSearchParams} from './tw-navigation-utils';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {PROJECTS_ENABLED} from './pebble-projects';
+import {ACCOUNTS_ENABLED, loadUser, onUserChange} from './pebble-accounts';
 
 /* eslint-disable no-alert */
 
@@ -283,6 +284,7 @@ const TWStateManager = function (WrappedComponent) {
         constructor (props) {
             super(props);
             bindAll(this, [
+                'handleAccountChange',
                 'handleHashChange',
                 'handlePopState',
                 'onSetProjectId',
@@ -323,6 +325,12 @@ const TWStateManager = function (WrappedComponent) {
                     }
                 } else {
                     this.props.onSetUsername(persistentUsername);
+                }
+
+                // PebbleIDE: projects see the signed-in account's username
+                if (ACCOUNTS_ENABLED) {
+                    this.stopListeningToAccount = onUserChange(this.handleAccountChange);
+                    loadUser().then(this.handleAccountChange);
                 }
             }
 
@@ -491,6 +499,17 @@ const TWStateManager = function (WrappedComponent) {
         componentWillUnmount () {
             window.removeEventListener('hashchange', this.handleHashChange);
             window.removeEventListener('popstate', this.handlePopState);
+            if (this.stopListeningToAccount) this.stopListeningToAccount();
+        }
+        handleAccountChange (user) {
+            if (user) {
+                // Not saved, so it doesn't stick around after signing out
+                this.doNotPersistUsername = user.username;
+                this.props.onSetUsername(user.username);
+            } else if (this.props.username === this.doNotPersistUsername) {
+                // Signed out: back to a random name
+                this.props.onSetUsername(generateRandomUsername());
+            }
         }
         handleHashChange () {
             this.router.onhashchange();

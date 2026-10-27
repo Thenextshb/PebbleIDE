@@ -1,5 +1,6 @@
 import bindAll from 'lodash.bindall';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import {APP_NAME} from '../../lib/brand';
@@ -15,11 +16,16 @@ import {
     setUpvoted
 } from '../../lib/pebble-projects';
 import SiteBar from '../pebble-home/site-bar.jsx';
+import SiteFooter from '../pebble-home/site-footer.jsx';
 import AccountModal from '../pebble-account/account-modal.jsx';
+import ReportModal from '../pebble-reports/report-modal.jsx';
+import {SaveIcon, UpvoteIcon, ViewIcon} from './icons.jsx';
 import {SmallAvatar, formatCount} from './project-card.jsx';
+import ProjectRow from './project-row.jsx';
 
 import homeStyles from '../pebble-home/home.css';
 import styles from './projects.css';
+import reportStyles from '../pebble-reports/reports.css';
 
 // [] uses the browser's own language
 const formatDate = time => new Date(time).toLocaleDateString([], {
@@ -35,29 +41,31 @@ class ProjectPage extends React.Component {
     constructor (props) {
         super(props);
         bindAll(this, [
+            'handleCloseReport',
             'handleCloseSignIn',
             'handleCopyLink',
+            'handleReport',
             'handleDelete',
             'handleSave',
             'handleUpvote',
             'handleUserChange'
         ]);
-        const id = new URLSearchParams(location.search).get('id');
         this.state = {
-            id,
+            id: props.id,
             project: null,
-            notFound: !id,
+            notFound: false,
             loadError: null,
             busy: null,
             message: null,
             messageIsError: false,
-            signingIn: false
+            signingIn: false,
+            reporting: false
         };
     }
     componentDidMount () {
         this.stopListening = onUserChange(this.handleUserChange);
         loadUser();
-        if (!this.state.id) return;
+        window.scrollTo(0, 0);
         this.load().then(() => countView(this.state.id))
             .then(views => {
                 if (this.state.project) this.setState({project: {...this.state.project, views}});
@@ -125,12 +133,20 @@ class ProjectPage extends React.Component {
     handleCloseSignIn () {
         this.setState({signingIn: false});
     }
+    handleReport () {
+        // Reporting needs an account
+        if (getUser()) this.setState({reporting: true});
+        else this.setState({signingIn: true});
+    }
+    handleCloseReport () {
+        this.setState({reporting: false});
+    }
     renderOwnerNote () {
         const {project} = this.state;
         if (!project.isOwner) return null;
         const minutes = Math.ceil((project.nextChangeAt - Date.now()) / 60000);
         return (
-            <p className={styles.sectionNote}>
+            <p className={styles.note}>
                 {'To change it, click See inside, then Upload in the editor. '}
                 {minutes > 0 ?
                     `You can change it again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.` :
@@ -140,24 +156,37 @@ class ProjectPage extends React.Component {
     }
     renderProject () {
         const {project, busy, message, messageIsError} = this.state;
+        const username = project.author.username;
         return (
             <React.Fragment>
-                <header className={styles.projectHeader}>
-                    <h1 className={classNames(styles.projectTitle, {[styles.gold]: project.featured})}>
-                        {project.title}
-                    </h1>
-                    <a
-                        className={styles.author}
-                        href={getProfileURL(project.author.username)}
-                    >
-                        <SmallAvatar
-                            username={project.author.username}
-                            version={project.author.avatarVersion}
-                        />
-                        {project.author.username}
-                    </a>
-                </header>
                 <div className={styles.projectLayout}>
+                    <header className={styles.projectHeader}>
+                        <a
+                            href={getProfileURL(username)}
+                            tabIndex={-1}
+                        >
+                            <SmallAvatar
+                                big
+                                username={username}
+                                version={project.author.avatarVersion}
+                            />
+                        </a>
+                        <div className={styles.projectHeading}>
+                            <h1 className={classNames(styles.projectTitle, {[styles.gold]: project.featured})}>
+                                {project.title}
+                            </h1>
+                            <div className={styles.projectBy}>
+                                {'by '}
+                                <a href={getProfileURL(username)}>{username}</a>
+                            </div>
+                        </div>
+                        <a
+                            className={styles.button}
+                            href={getEditorURL(project.id)}
+                        >
+                            {'See inside'}
+                        </a>
+                    </header>
                     <div className={styles.player}>
                         <iframe
                             allowFullScreen
@@ -167,60 +196,60 @@ class ProjectPage extends React.Component {
                             title={project.title}
                         />
                     </div>
-                    <aside className={styles.section}>
-                        {project.featured && <span className={styles.featuredBadge}>{'Featured'}</span>}
-                        <div className={styles.actions}>
+                    <div className={styles.projectStats}>
+                        <button
+                            aria-pressed={project.youUpvoted}
+                            className={classNames(styles.stat, {[styles.upvoted]: project.youUpvoted})}
+                            disabled={busy === 'upvote' || project.isOwner}
+                            title={project.isOwner ? 'You can\'t upvote your own project' : 'Upvote'}
+                            type="button"
+                            onClick={this.handleUpvote}
+                        >
+                            <UpvoteIcon />
+                            {formatCount(project.upvotes, 'upvote', 'upvotes')}
+                        </button>
+                        <button
+                            aria-pressed={project.youSaved}
+                            className={classNames(styles.stat, {[styles.saved]: project.youSaved})}
+                            disabled={busy === 'save'}
+                            type="button"
+                            onClick={this.handleSave}
+                        >
+                            <SaveIcon />
+                            {project.youSaved ? 'Saved' : 'Save'}
+                        </button>
+                        <span className={styles.stat}>
+                            <ViewIcon />
+                            {formatCount(project.views, 'view', 'views')}
+                        </span>
+                        <div className={styles.statsEnd}>
                             <button
-                                className={classNames(styles.button, {[styles.upvoted]: project.youUpvoted})}
-                                disabled={busy === 'upvote' || project.isOwner}
-                                title={project.isOwner ? 'You can\'t upvote your own project' : 'Upvote'}
-                                type="button"
-                                onClick={this.handleUpvote}
-                            >
-                                {`▲ ${project.youUpvoted ? 'Upvoted' : 'Upvote'}`}
-                            </button>
-                            <button
-                                className={classNames(styles.button, {[styles.saved]: project.youSaved})}
-                                disabled={busy === 'save'}
-                                type="button"
-                                onClick={this.handleSave}
-                            >
-                                {`★ ${project.youSaved ? 'Saved' : 'Save'}`}
-                            </button>
-                        </div>
-                        <div className={styles.actions}>
-                            <a
-                                className={classNames(styles.button, styles.primary)}
-                                href={getEditorURL(project.id)}
-                            >
-                                {'See inside'}
-                            </a>
-                            <button
-                                className={styles.button}
+                                className={classNames(styles.button, styles.small, styles.secondary)}
                                 type="button"
                                 onClick={this.handleCopyLink}
                             >
                                 {'Copy link'}
                             </button>
                         </div>
-                        <p className={styles.stats}>
-                            <span><strong>{formatCount(project.views, 'view', 'views')}</strong></span>
-                            <span><strong>{formatCount(project.upvotes, 'upvote', 'upvotes')}</strong></span>
-                        </p>
-                        <p className={styles.sectionNote}>{`Shared ${formatDate(project.created)}`}</p>
-                        {this.renderOwnerNote()}
-                        {project.canDelete && (
-                            <div className={styles.actions}>
-                                <button
-                                    className={classNames(styles.button, styles.danger)}
-                                    disabled={busy === 'delete'}
-                                    type="button"
-                                    onClick={this.handleDelete}
-                                >
-                                    {'Delete project'}
-                                </button>
+                    </div>
+                    <aside className={styles.projectSide}>
+                        {project.featured && (
+                            <div className={styles.featuredBanner}>
+                                <SaveIcon />
+                                {'Featured project'}
                             </div>
                         )}
+                        <section className={styles.box}>
+                            <div className={styles.boxHeader}>
+                                <h2 className={styles.boxTitle}>{'About this project'}</h2>
+                            </div>
+                            <div className={styles.boxContent}>
+                                {project.description ?
+                                    <p className={styles.description}>{project.description}</p> :
+                                    <p className={styles.note}>{'No description.'}</p>}
+                            </div>
+                        </section>
+                        {this.renderOwnerNote()}
                         {message && (
                             <p
                                 className={classNames(styles.message, {[styles.messageError]: messageIsError})}
@@ -229,14 +258,40 @@ class ProjectPage extends React.Component {
                                 {message}
                             </p>
                         )}
+                        <div className={styles.sideFooter}>
+                            <span>{`Shared ${formatDate(project.created)}`}</span>
+                            {!project.isOwner && (
+                                <button
+                                    className={reportStyles.reportButton}
+                                    type="button"
+                                    onClick={this.handleReport}
+                                >
+                                    {'⚑ Report this project'}
+                                </button>
+                            )}
+                        </div>
+                        {project.canDelete && (
+                            <div>
+                                <button
+                                    className={classNames(styles.button, styles.small, styles.danger)}
+                                    disabled={busy === 'delete'}
+                                    type="button"
+                                    onClick={this.handleDelete}
+                                >
+                                    {'Delete project'}
+                                </button>
+                            </div>
+                        )}
                     </aside>
                 </div>
-                <section className={styles.section}>
-                    <h2 className={styles.sectionHeading}>{'About this project'}</h2>
-                    {project.description ?
-                        <p className={styles.description}>{project.description}</p> :
-                        <p className={styles.sectionNote}>{'No description.'}</p>}
-                </section>
+                <ProjectRow
+                    hideWhenEmpty
+                    emptyText=""
+                    hideProject={project.id}
+                    list="user"
+                    title={`More projects by ${username}`}
+                    user={username}
+                />
             </React.Fragment>
         );
     }
@@ -254,15 +309,28 @@ class ProjectPage extends React.Component {
                 <main className={styles.pageMain}>
                     {this.renderContent()}
                 </main>
+                <SiteFooter />
                 {this.state.signingIn && (
                     <AccountModal
                         mode="sign-in"
                         onClose={this.handleCloseSignIn}
                     />
                 )}
+                {this.state.reporting && this.state.project && (
+                    <ReportModal
+                        kind="project"
+                        name={`"${this.state.project.title}"`}
+                        target={this.state.project.id}
+                        onClose={this.handleCloseReport}
+                    />
+                )}
             </div>
         );
     }
 }
+
+ProjectPage.propTypes = {
+    id: PropTypes.string.isRequired
+};
 
 export default ProjectPage;
